@@ -1,36 +1,83 @@
 // src/rest/RESTManager.ts
 import { request } from 'undici';
-import { APIResponse } from '../types/api';
+import type { APIResponse } from '../types/api.js';
+import type { User } from '../types/user.js';
+import type { Message } from '../types/message.js';
+import type { Update } from '../types/update.js';
+import type { InlineKeyboardMarkup } from '../types/keyboard.js';
+import { BaleAPIError } from './errors.js';
+
+export interface RequestOptions {
+    /** پارامترهای JSON (برای درخواست‌های غیر فایل) */
+    body?: Record<string, unknown>;
+    /** فایل‌ها برای آپلود (multipart/form-data) */
+    files?: Record<string, { data: Buffer | Uint8Array; filename: string; contentType?: string }>;
+}
 
 export class RESTManager {
-    private baseUrl: string;
+    private readonly baseUrl: string;
 
-    constructor(private token: string) {
+    constructor(private readonly token: string) {
         this.baseUrl = `https://tapi.bale.ai/bot${token}`;
     }
 
-    async request<T>(method: string, body?: Record<string, any>): Promise<T> {
+    /**
+     * درخواست پایه به API بله.
+     * اگر files داده شود، از multipart/form-data استفاده می‌کند.
+     */
+    async request<T>(method: string, options: RequestOptions = {}): Promise<T> {
         const url = `${this.baseUrl}/${method}`;
+
+        let body: any;
+        let headers: Record<string, string> = {};
+
+        if (options.files && Object.keys(options.files).length > 0) {
+            const form = new FormData();
+
+            // پارامترهای متنی
+            if (options.body) {
+                for (const [key, value] of Object.entries(options.body)) {
+                    if (value !== undefined && value !== null) {
+                        form.append(key, String(value));
+                    }
+                }
+            }
+
+            // فایل‌ها
+            for (const [key, file] of Object.entries(options.files)) {
+                const blob = new Blob([file.data], { type: file.contentType ?? 'application/octet-stream' });
+                form.append(key, blob, file.filename);
+            }
+
+            body = form;
+            // undici خودش هدر Content-Type را برای FormData تنظیم می‌کند
+        } else {
+            headers['Content-Type'] = 'application/json';
+            body = JSON.stringify(options.body ?? {});
+        }
+
         const { statusCode, body: responseBody } = await request(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: body ? JSON.stringify(body) : undefined,
+            headers,
+            body,
         });
 
         const data = (await responseBody.json()) as APIResponse<T>;
 
         if (!data.ok) {
             throw new BaleAPIError(
-                data.error_code || statusCode,
-                data.description || 'Unknown error'
+                data.error_code ?? statusCode,
+                data.description ?? 'خطای ناشناخته در API بله',
+                data.parameters,
             );
         }
 
         return data.result as T;
     }
 
-    // متدهای میان‌بر برای متدهای رایج
-    getMe() {
+    // ─── میان‌برهای رایج ───────────────────────────────────────────
+
+    getMe(): Promise<User> {
         return this.request<User>('getMe');
     }
 
@@ -39,26 +86,19 @@ export class RESTManager {
         text: string;
         reply_markup?: InlineKeyboardMarkup;
         reply_to_message_id?: number;
-    }) {
-        return this.request<Message>('sendMessage', params);
+    }): Promise<Message> {
+        return this.request<Message>('sendMessage', { body: params });
     }
 
-    getUpdates(params?: { offset?: number; limit?: number; timeout?: number }) {
-        return this.request<Update[]>('getUpdates', params);
+    getUpdates(params?: { offset?: number; limit?: number; timeout?: number }): Promise<Update[]> {
+        return this.request<Update[]>('getUpdates', { body: params ?? {} });
     }
 
-    setWebhook(url: string) {
-        return this.request<boolean>('setWebhook', { url });
+    setWebhook(url: string): Promise<boolean> {
+        return this.request<boolean>('setWebhook', { body: { url } });
     }
 
-    deleteWebhook() {
+    deleteWebhook(): Promise<boolean> {
         return this.request<boolean>('deleteWebhook');
-    }
-}
-
-export class BaleAPIError extends Error {
-    constructor(public code: number, message: string) {
-        super(message);
-        this.name = 'BaleAPIError';
     }
 }
