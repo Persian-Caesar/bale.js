@@ -45,6 +45,7 @@ export class RESTManager {
 
             // فایل‌ها
             for (const [key, file] of Object.entries(options.files)) {
+                // @ts-ignore
                 const blob = new Blob([file.data], { type: file.contentType ?? 'application/octet-stream' });
                 form.append(key, blob, file.filename);
             }
