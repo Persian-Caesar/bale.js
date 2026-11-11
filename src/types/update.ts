@@ -1,26 +1,25 @@
-// src/types/update.ts
-import type { Message } from './message.js';
-import type { User } from './user.js';
+import type { APIMessage } from './message.js';
+import type { APIUser } from './user.js';
 
 export interface Update {
     update_id: number;
-    message?: Message;
-    edited_message?: Message;
+    message?: APIMessage;
+    edited_message?: APIMessage;
     callback_query?: CallbackQuery;
     pre_checkout_query?: PreCheckoutQuery;
 }
 
 export interface CallbackQuery {
     id: string;
-    from: User;
-    message?: Message;
+    from: APIUser;
+    message?: APIMessage;
     inline_message_id?: string;
     data?: string;
 }
 
 export interface PreCheckoutQuery {
     id: string;
-    from: User;
+    from: APIUser;
     currency: string;
     total_amount: number;
     invoice_payload: string;

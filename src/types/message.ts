@@ -1,17 +1,16 @@
-// src/types/message.ts
-import type { User } from './user';
-import type { Chat } from './chat';
 import type { InlineKeyboardMarkup } from './keyboard';
+import type { APIUser } from './user';
+import type { APIChat } from './chat';
 
-export interface Message {
+export interface APIMessage {
     message_id: number;
-    from?: User;
-    chat: Chat;
+    from?: APIUser;
+    chat: APIChat;
     date: number;
     text?: string;
     caption?: string;
     reply_markup?: InlineKeyboardMarkup;
-    reply_to_message?: Message;
+    reply_to_message?: APIMessage;
     /** فایل‌های ضمیمه بر اساس مستندات بله */
     photo?: PhotoSize[];
     document?: Document;

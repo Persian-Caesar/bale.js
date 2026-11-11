@@ -2,7 +2,7 @@
 
 export type ChatType = 'private' | 'group' | 'channel';
 
-export interface Chat {
+export interface APIChat {
     id: number;
     type: ChatType;
     title?: string;

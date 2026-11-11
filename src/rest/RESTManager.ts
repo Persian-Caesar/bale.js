@@ -1,11 +1,11 @@
 // src/rest/RESTManager.ts
 import { request } from 'undici';
-import type { APIResponse } from '../types/api.js';
-import type { User } from '../types/user.js';
-import type { Message } from '../types/message.js';
-import type { Update } from '../types/update.js';
-import type { InlineKeyboardMarkup } from '../types/keyboard.js';
-import { BaleAPIError } from './errors.js';
+import type { APIResponse } from '../types/api';
+import type { APIUser } from '../types/user';
+import type { APIMessage } from '../types/message';
+import type { Update } from '../types/update';
+import type { InlineKeyboardMarkup } from '../types/keyboard';
+import { BaleAPIError } from './errors';
 
 export interface RequestOptions {
     /** پارامترهای JSON (برای درخواست‌های غیر فایل) */
@@ -78,8 +78,8 @@ export class RESTManager {
 
     // ─── میان‌برهای رایج ───────────────────────────────────────────
 
-    getMe(): Promise<User> {
-        return this.request<User>('getMe');
+    getMe(): Promise<APIUser> {
+        return this.request<APIUser>('getMe');
     }
 
     sendMessage(params: {
@@ -87,8 +87,8 @@ export class RESTManager {
         text: string;
         reply_markup?: InlineKeyboardMarkup;
         reply_to_message_id?: number;
-    }): Promise<Message> {
-        return this.request<Message>('sendMessage', { body: params });
+    }): Promise<APIMessage> {
+        return this.request<APIMessage>('sendMessage', { body: params });
     }
 
     getUpdates(params?: { offset?: number; limit?: number; timeout?: number }): Promise<Update[]> {

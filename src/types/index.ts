@@ -1,7 +1,6 @@
-// src/types/index.ts
-export * from './api.js';
-export * from './user.js';
-export * from './chat.js';
-export * from './message.js';
-export * from './update.js';
-export * from './keyboard.js';
+export type * from './api';
+export type * from './user';
+export type * from './chat';
+export type * from './message';
+export type * from './update';
+export type * from './keyboard';

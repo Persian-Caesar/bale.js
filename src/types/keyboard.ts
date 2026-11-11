@@ -1,5 +1,3 @@
-// src/types/keyboard.ts
-
 export type ButtonColor = 'primary' | 'success' | 'danger';
 
 export interface InlineKeyboardButton {
