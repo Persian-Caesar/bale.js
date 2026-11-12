@@ -1,70 +1,111 @@
-# bale.js Documentation
+# 📚 مستندات کامل و جامع bale.js
 
-> A powerful, discord.js-like library for building Bale messenger bots with TypeScript.
+> کتابخانه‌ای قدرتمند، تایپ‌شده و ماژولار برای ساخت ربات‌های پیام‌رسان بله (Bale) با TypeScript
 
-**Version:** 0.1.0 · **Node.js:** ≥ 18 · **License:** MIT
-
-This document is the complete reference for `bale.js`. It covers installation, client setup, every manager and builder, media handling, group administration, payments, web apps, error handling, and deployment.
+**نسخه:** 0.1.0 · **Node.js:** ≥ 18 · **لایسنس:** MIT
 
 ---
 
-## Table of Contents
+## فهرست مطالب
 
-- [bale.js Documentation](#balejs-documentation)
-  - [Table of Contents](#table-of-contents)
-  - [1. Installation](#1-installation)
-  - [2. Quick Start](#2-quick-start)
-  - [3. Client Configuration](#3-client-configuration)
-    - [Polling Mode](#polling-mode)
-    - [Webhook Mode](#webhook-mode)
-  - [4. Events](#4-events)
-  - [5. Structures](#5-structures)
-    - [User](#user)
-    - [Chat](#chat)
-    - [Message](#message)
-    - [CallbackQuery](#callbackquery)
-  - [6. Managers](#6-managers)
-    - [MessageManager](#messagemanager)
-    - [ChatManager](#chatmanager)
-    - [MediaManager](#mediamanager)
-    - [GroupManager](#groupmanager)
-    - [PaymentManager](#paymentmanager)
-  - [7. Builders](#7-builders)
-    - [InlineKeyboardBuilder](#inlinekeyboardbuilder)
-    - [ReplyKeyboardBuilder](#replykeyboardbuilder)
-    - [MessageBuilder](#messagebuilder)
-    - [InvoiceBuilder](#invoicebuilder)
-  - [8. Media \& File Handling](#8-media--file-handling)
-  - [9. Group Administration](#9-group-administration)
-  - [10. Payments \& Invoices](#10-payments--invoices)
-  - [11. Web Apps (Mini Apps)](#11-web-apps-mini-apps)
-  - [12. Error Handling](#12-error-handling)
-  - [13. TypeScript Types](#13-typescript-types)
-  - [14. Utility: Collection](#14-utility-collection)
-  - [15. Deployment \& GitHub Pages](#15-deployment--github-pages)
-  - [16. FAQ](#16-faq)
-  - [License](#license)
+1. [معرفی bale.js](#۱-معرفی-balejs)
+2. [نصب و پیش‌نیازها](#۲-نصب-و-پیشنیازها)
+3. [شروع سریع در ۵ دقیقه](#۳-شروع-سریع-در-۵-دقیقه)
+4. [کلاینت (BaleClient)](#۴-کلاینت-baleclient)
+5. [رویدادها (Events)](#۵-رویدادها-events)
+6. [ساختارها (Structures)](#۶-ساختارها-structures)
+7. [مدیریت پیام‌ها](#۷-مدیریت-پیامها)
+8. [مدیریت رسانه](#۸-مدیریت-رسانه)
+9. [مدیریت گروه](#۹-مدیریت-گروه)
+10. [پرداخت و فاکتور](#۱۰-پرداخت-و-فاکتور)
+11. [بیلدرها (Builders)](#۱۱-بیلدرها-builders)
+12. [مدیریت خطا](#۱۲-مدیریت-خطا)
+13. [ابزارهای کمکی (Collection)](#۱۳-ابزارهای-کمکی-collection)
+14. [الگوهای طراحی و بهترین شیوه‌ها](#۱۴-الگوهای-طراحی-و-بهترین-شیوهها)
+15. [عیب‌یابی](#۱۵-عیبیابی)
+16. [سوالات متداول](#۱۶-سوالات-متداول)
+17. [سهم در توسعه](#۱۷-سهم-در-توسعه)
 
 ---
 
-## 1. Installation
+## ۱. معرفی bale.js
 
-```bash
-npm install bale.js
+**bale.js** کتابخانه‌ای برای ساخت ربات‌های پیام‌رسان بله است که با الهام از `discord.js` و `grammY` طراحی شده. ویژگی‌های اصلی:
+
+| ویژگی                        | توضیح                                               |
+| :--------------------------- | :-------------------------------------------------- |
+| 🧩 **معماری ماژولار**         | Client، REST، Structures، Managers، Builders        |
+| 🔄 **دو حالت دریافت آپدیت**   | Long Polling و Webhook — بدون تغییر کد قابل تعویض   |
+| ⌨️ **بیلدرهای روان (Fluent)** | ساخت کیبورد و پیام به صورت زنجیره‌ای                 |
+| 📎 **پشتیبانی کامل رسانه**    | عکس، سند، ویدیو، صدا، ویس — با `file_id`/URL/Buffer |
+| 👥 **مدیریت گروه**            | Ban، Promote، Pin، InviteLink و…                    |
+| 💳 **پرداخت و مینی‌اپ**        | فاکتور، PreCheckout، WebAppData                     |
+| 🛡️ **TypeScript سختگیرانه**   | تعریف کامل انواع با `strict` mode                   |
+| 🚀 **سبک و سریع**             | تنها وابستگی: `undici`                              |
+
+### فلسفه طراحی
+
+کتابخانه از پنج لایه تشکیل شده که هر کدام مسئولیت مشخصی دارند:
+
+```
+┌─────────────────────────────────────────┐
+│           BaleClient (همه‌چیز)          │  ← نقطه ورود
+├─────────────────────────────────────────┤
+│  Managers (تماس با API)                 │  ← messages, media, groups, ...
+├─────────────────────────────────────────┤
+│  Structures (پوشش داده)                 │  ← User, Chat, Message
+├─────────────────────────────────────────┤
+│  Builders (ساخت Payload)                │  ← کیبورد، فاکتور، ...
+├─────────────────────────────────────────┤
+│  RESTManager (تنها لایه شبکه)            │  ← undici
+└─────────────────────────────────────────┘
 ```
 
-**Requirements:**
-- Node.js **18** or later (Node 20 LTS recommended)
-- npm **9** or later
-
-The library is written in TypeScript and ships with full type definitions (`dist/index.d.ts`). It works in both CommonJS and ESM projects.
+**قانون طلایی:** فقط `RESTManager` با `tapi.bale.ai` حرف می‌زند. هیچ‌جای دیگری نباید درخواست HTTP بزند.
 
 ---
 
-## 2. Quick Start
+## ۲. نصب و پیش‌نیازها
 
-```typescript
-import { BaleClient, InlineKeyboardBuilder } from '@persian-caesar/bale.js';
+### پیش‌نیازها
+
+- **Node.js** ≥ 18 (توصیه: Node 20 LTS)
+- **npm** ≥ 9 (یا `pnpm`/`yarn`)
+- یک **توکن ربات** از [BotFather بله](https://ble.ir/botfather)
+
+### نصب
+
+```bash
+npm install @persian-caesar/bale.js
+```
+
+یا با pnpm:
+
+```bash
+pnpm add @persian-caesar/bale.js
+```
+
+### ساخت ربات
+
+1. به [@botfather](https://ble.ir/botfather) در بله پیام دهید.
+2. دستور `/newbot` را بزنید و نام و username ربات را انتخاب کنید.
+3. توکنی شبیه `123456:ABC-DEF...` دریافت می‌کنید. آن را در متغیر محیطی ذخیره کنید:
+
+```bash
+# .env
+BALE_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+```
+
+> ⚠️ **هرگز توکن را در Git commit نکنید.** فایل `.env` باید در `.gitignore` باشد.
+
+---
+
+## ۳. شروع سریع در ۵ دقیقه
+
+### ربات Echo ساده
+
+```ts
+import { BaleClient } from '@persian-caesar/bale.js';
 
 const client = new BaleClient({
   token: process.env.BALE_TOKEN!,
@@ -72,21 +113,45 @@ const client = new BaleClient({
 });
 
 client.on('ready', (me) => {
-  console.log(`Logged in as @${me.username}`);
+  console.log(`✅ ربات @${me.username} آماده است`);
 });
 
 client.on('messageCreate', async (message) => {
-  if (message.text === '/start') {
-    const keyboard = new InlineKeyboardBuilder()
-      .addButton('Click me', { callback_data: 'clicked', color: 'primary' })
-      .build();
+  if (!message.hasText) return;
+  await message.reply(`شما گفتید: ${message.text}`);
+});
 
-    await message.reply('Welcome to bale.js!', { reply_markup: keyboard });
-  }
+client.on('error', (err) => {
+  console.error('❌ خطا:', err);
+});
+
+client.login();
+```
+
+### ربات با کیبورد شیشه‌ای
+
+```ts
+import { BaleClient, InlineKeyboardBuilder } from '@persian-caesar/bale.js';
+
+const client = new BaleClient({ token: process.env.BALE_TOKEN! });
+
+client.on('messageCreate', async (message) => {
+  if (message.text !== '/start') return;
+
+  const keyboard = new InlineKeyboardBuilder()
+    .addButton('🛍 محصولات', { callback_data: 'products' })
+    .addButton('🛒 سبد خرید', { callback_data: 'cart' })
+    .addButton('🌐 سایت', { url: 'https://example.com', color: 'primary' })
+    .adjust(2, 1)
+    .build();
+
+  await message.reply('یکی از گزینه‌ها را انتخاب کنید:', {
+    reply_markup: keyboard,
+  });
 });
 
 client.on('callbackQuery', async (query) => {
-  await query.answer('Button clicked!', true);
+  await query.answer(`شما ${query.data} را انتخاب کردید`);
 });
 
 client.login();
@@ -94,92 +159,247 @@ client.login();
 
 ---
 
-## 3. Client Configuration
+## ۴. کلاینت (BaleClient)
 
-The `BaleClient` constructor accepts a single options object:
+`BaleClient` قلب کتابخانه است. تمام مدیران از طریق این کلاینت قابل دسترسی هستند.
 
-```typescript
+### گزینه‌های سازنده
+
+```ts
 interface BaleClientOptions {
+  /** توکن ربات (الزامی) */
   token: string;
+
+  /** حالت دریافت آپدیت. پیش‌فرض: 'polling' */
   mode?: 'polling' | 'webhook';
-  polling?: { timeout?: number; limit?: number };
-  webhook?: { url: string; port?: number; path?: string };
+
+  /** تنظیمات Polling */
+  polling?: {
+    timeout?: number;  // پیش‌فرض ۳۰ ثانیه
+    limit?: number;    // پیش‌فرض ۱۰۰
+  };
+
+  /** تنظیمات Webhook */
+  webhook?: {
+    url: string;       // الزامی
+    port?: number;     // پیش‌فرض 3000
+    path?: string;     // پیش‌فرض '/bale/webhook'
+  };
 }
 ```
 
-### Polling Mode
+### دسترسی‌ها
 
-Long polling is the simplest way to get started. The client continuously calls `getUpdates` and dispatches events.
+```ts
+client.rest;      // RESTManager — دسترسی خام به API
+client.messages;  // MessageManager — ارسال/ویرایش/حذف پیام
+client.chats;     // ChatManager — دریافت اطلاعات چت
+client.media;     // MediaManager — عکس، سند، ویدیو...
+client.groups;    // GroupManager — مدیریت اعضا
+client.payments;  // PaymentManager — پرداخت
+client.user;      // اطلاعات ربات (پس از login)
+```
 
-```typescript
+### متد `login()`
+
+کلاینت را راه‌اندازی می‌کند:
+
+1. با `getMe` اطلاعات ربات را دریافت می‌کند.
+2. رویداد `ready` را منتشر می‌کند.
+3. بسته به `mode`:
+   - **polling**: حلقه دریافت آپدیت را شروع می‌کند.
+   - **webhook**: وبهوک را ثبت و سرور HTTP را راه‌اندازی می‌کند.
+
+```ts
+await client.login();
+```
+
+### متد `destroy()`
+
+کلاینت را متوقف می‌کند:
+
+- در حالت polling: حلقه را متوقف می‌کند.
+- در حالت webhook: سرور را می‌بندد و وبهوک را از Bale حذف می‌کند.
+
+```ts
+await client.destroy();
+```
+
+> 💡 **نکته:** اگر در حالت webhook هستید و می‌خواهید موقتاً به polling سوییچ کنید، **اول باید `deleteWebhook` را صدا بزنید** (که `destroy()` خودش این کار را می‌کند). Bale اجازه نمی‌دهد هم‌زمان webhook و polling فعال باشند.
+
+### حالت Polling — کی و چطور؟
+
+**مناسب برای:** توسعه، ربات‌های کوچک، سرورهای بدون IP عمومی.
+
+```ts
 const client = new BaleClient({
   token: process.env.BALE_TOKEN!,
   mode: 'polling',
   polling: {
-    timeout: 30, // seconds
-    limit: 100,  // max updates per request
+    timeout: 30,  // Long-polling: هر درخواست تا ۳۰ ثانیه باز می‌ماند
+    limit: 100,   // حداکثر ۱۰۰ آپدیت در هر درخواست
   },
 });
 ```
 
-**Important:** Bale only retains the last **2,000 updates for 24 hours**. If your bot is offline longer than that, messages are lost. Polling and webhooks are mutually exclusive — if a webhook is set, `getUpdates` returns nothing.
+**مکانیزم داخلی:**
 
-### Webhook Mode
+```
+┌─────────────────────────────┐
+│ offset = 0                  │
+└──────────────┬──────────────┘
+               ▼
+     ┌──────────────────┐
+     │ getUpdates(...)  │  ← بلاک تا دریافت آپدیت یا timeout
+     └────────┬─────────┘
+              ▼
+   ┌──────────────────────┐
+   │ for each update:     │
+   │   offset = id + 1    │
+   │   dispatchUpdate()   │
+   └──────────┬───────────┘
+              ▼
+        (تکرار تا stop)
+```
 
-Webhook mode registers a public URL with Bale and starts a local HTTP server to receive updates.
+**اگر خطا رخ دهد:**
 
-```typescript
+| خطا                      | رفتار                             |
+| :----------------------- | :-------------------------------- |
+| `BaleAPIError` با کد 429 | به اندازه `retry_after` صبر می‌کند |
+| سایر خطاها               | ۲ ثانیه صبر می‌کند                 |
+
+**محدودیت مهم بله:** Bale تنها **۲۰۰۰ آپدیت آخر** را **برای ۲۴ ساعت** نگه می‌دارد. اگر ربات بیش از ۲۴ ساعت خاموش باشد، پیام‌ها از دست می‌روند.
+
+### حالت Webhook — کی و چطور؟
+
+**مناسب برای:** production، ربات‌های پرترافیک، سرورهای با IP عمومی.
+
+```ts
 const client = new BaleClient({
   token: process.env.BALE_TOKEN!,
   mode: 'webhook',
   webhook: {
-    url: 'https://yourdomain.com/bale/webhook',
-    port: 3000,
-    path: '/bale/webhook',
+    url: 'https://yourdomain.com/bale/webhook', // آدرس عمومی
+    port: 3000,                                 // پورت محلی سرور
+    path: '/bale/webhook',                      // مسیر
   },
 });
 ```
 
-**Note on ports:** Bale accepts webhooks only on a limited set of ports. If your server sits behind a reverse proxy (Nginx, Caddy), run the local HTTP server on any port and expose it publicly on an allowed port (e.g., 443).
+**نحوه کار:**
 
-To stop the client and remove the webhook:
+1. کتابخانه به Bale می‌گوید «هر آپدیت را به `https://yourdomain.com/bale/webhook` بفرست».
+2. یک سرور HTTP محلی روی `port` و `path` بالا می‌آورد.
+3. هر درخواست POST را به `dispatchUpdate` می‌فرستد.
 
-```typescript
-await client.destroy();
+**نکته پورت:** Bale فقط روی **پورت‌های محدود** (معمولاً 443، 80، 88، 8443) وبهوک می‌پذیرد. اگر پشت reverse proxy هستید (Nginx، Caddy)، سرور محلی را روی هر پورتی اجرا کنید و از بیرون روی 443 منتشر کنید.
+
+**مثال با Nginx:**
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name yourdomain.com;
+
+    location /bale/webhook {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+### متد `dispatchUpdate()` (پیشرفته)
+
+اگر خودتان یک لایه HTTP دارید (مثلاً Express)، می‌توانید از `BaleClient` بدون حالت webhook استفاده کنید:
+
+```ts
+import express from 'express';
+import { BaleClient } from '@persian-caesar/bale.js';
+
+const client = new BaleClient({ token: process.env.BALE_TOKEN! });
+const app = express();
+app.use(express.json());
+
+app.post('/bale/webhook', (req, res) => {
+  client.dispatchUpdate(req.body);
+  res.send('OK');
+});
+
+app.listen(8080);
 ```
 
 ---
 
-## 4. Events
+## ۵. رویدادها (Events)
 
-`BaleClient` extends `EventEmitter`. Listen to events with `client.on(event, handler)`.
+`BaleClient` از `TypedEmitter` ارث‌بری می‌کند — همان `EventEmitter` نود اما **تایپ‌شده**.
 
-| Event           | Payload                               | Description                                 |
-| :-------------- | :------------------------------------ | :------------------------------------------ |
-| `ready`         | `APIUser`                             | Bot information after `login()` succeeds    |
-| `messageCreate` | `Message`                             | A new message was received                  |
-| `messageEdit`   | `Message`                             | A message was edited                        |
-| `callbackQuery` | `CallbackQuery`                       | An inline button was clicked                |
-| `webAppData`    | `{ from, data, buttonText, message }` | Data returned from a mini app               |
-| `error`         | `unknown`                             | Any unhandled error (API, network, parsing) |
+### جدول رویدادها
 
-**Example:**
+| رویداد          | Payload                               | توضیح                          |
+| :-------------- | :------------------------------------ | :----------------------------- |
+| `ready`         | `APIUser`                             | پس از `login()` موفق           |
+| `messageCreate` | `Message`                             | پیام جدید دریافت شد            |
+| `messageEdit`   | `Message`                             | یک پیام ویرایش شد              |
+| `callbackQuery` | `CallbackQuery`                       | کاربر روی دکمه شیشه‌ای کلیک کرد |
+| `webAppData`    | `{ from, data, buttonText, message }` | داده از مینی‌اپ                 |
+| `error`         | `unknown`                             | هر خطای مدیریت‌نشده             |
 
-```typescript
+### الگوی توصیه‌شده برای گوش دادن
+
+```ts
+client.on('ready', (me) => {
+  console.log(`ربات @${me.username} با ID ${me.id} آماده شد`);
+});
+
+client.on('messageCreate', async (message) => {
+  try {
+    // همیشه از try/catch استفاده کنید
+    await handleMessage(message);
+  } catch (err) {
+    console.error('خطا در پردازش پیام:', err);
+  }
+});
+
 client.on('error', (err) => {
   console.error('[bale.js]', err);
 });
 ```
 
+> ⚠️ **همیشه به `error` گوش دهید.** اگر خطایی رخ دهد و listener نداشته باشید، نود آن را روی `stderr` چاپ می‌کند و در بعضی موارد کل پروسه را می‌بندد.
+
+### الگوی Router دستی
+
+```ts
+client.on('messageCreate', async (message) => {
+  const text = message.text;
+  if (!text) return;
+
+  if (text === '/start')      return handleStart(message);
+  if (text === '/help')       return handleHelp(message);
+  if (text.startsWith('/echo ')) return handleEcho(message, text.slice(6));
+  // ...
+});
+```
+
+### گوش دادن یک‌باره
+
+```ts
+client.once('ready', (me) => {
+  console.log(`ربات @${me.username} بالاخره آماده شد!`);
+});
+```
+
 ---
 
-## 5. Structures
+## ۶. ساختارها (Structures)
 
-Structures are read-only wrappers around raw API data. They expose convenience getters and methods that delegate to managers.
+ساختارها **پوشش‌های فقط‌خواندنی** روی داده خام API هستند. آن‌ها getter و متدهای کمکی دارند که به مدیران مربوطه واگذار می‌کنند.
 
-### User
+### ۶.۱. `User` — کاربر یا ربات
 
-```typescript
+```ts
 class User {
   readonly id: number;
   readonly isBot: boolean;
@@ -188,31 +408,64 @@ class User {
   readonly username?: string;
   readonly languageCode?: string;
 
+  /** نام کامل — "نام نام‌خانوادگی" */
   get fullName(): string;
-  toString(): string; // @username or full name
+
+  /** @username یا نام کامل */
+  toString(): string;
 }
 ```
 
-### Chat
+**مثال:**
 
-```typescript
+```ts
+client.on('messageCreate', (message) => {
+  if (!message.from) return;
+  console.log(`${message.from.fullName} (${message.from.id}) پیام داد`);
+  // اگر username داشته باشد: @alice
+  console.log(`منشن: ${message.from}`);
+});
+```
+
+### ۶.۲. `Chat` — چت (خصوصی، گروه، کانال)
+
+```ts
+type ChatType = 'private' | 'group' | 'channel';
+
 class Chat {
   readonly id: number;
-  readonly type: 'private' | 'group' | 'channel';
+  readonly type: ChatType;
   readonly title?: string;
   readonly username?: string;
+  readonly firstName?: string;
+  readonly lastName?: string;
 
   get isPrivate(): boolean;
   get isGroup(): boolean;
   get isChannel(): boolean;
 
+  /** ارسال پیام به این چت */
   send(text: string, options?): Promise<Message>;
 }
 ```
 
-### Message
+**مثال:**
 
-```typescript
+```ts
+client.on('messageCreate', async (message) => {
+  if (message.chat.isGroup) {
+    console.log(`پیام از گروه: ${message.chat.title}`);
+  }
+
+  if (message.chat.isPrivate) {
+    await message.chat.send('سلام در چت خصوصی!');
+  }
+});
+```
+
+### ۶.۳. `Message` — پیام
+
+```ts
 class Message {
   readonly id: number;
   readonly chat: Chat;
@@ -223,375 +476,1162 @@ class Message {
   readonly replyMarkup?: InlineKeyboardMarkup;
   readonly replyToMessage?: Message;
 
+  /** داده خام API — برای استفاده‌های پیشرفته */
+  get raw(): APIMessage;
+
+  /** پاسخ به این پیام (به‌صورت Reply) */
   reply(text: string, options?): Promise<Message>;
+
+  /** ویرایش این پیام (فقط پیام‌های ارسالی ربات) */
   edit(text: string): Promise<Message>;
+
+  /** حذف این پیام */
   delete(): Promise<void>;
 
+  /** آیا متن دارد؟ */
   get hasText(): boolean;
+
+  /** آیا کپشن دارد؟ */
   get hasCaption(): boolean;
 }
 ```
 
-### CallbackQuery
+**مثال کامل:**
 
-```typescript
+```ts
+client.on('messageCreate', async (message) => {
+  // نوع پیام را تشخیص بده
+  if (message.hasText) {
+    await message.reply(`متن: ${message.text}`);
+  }
+
+  // reply_to_message را دنبال کن
+  if (message.replyToMessage) {
+    console.log(`در پاسخ به: ${message.replyToMessage.text}`);
+  }
+
+  // ویرایش پیام
+  if (message.text === '/edit-me') {
+    await message.edit('ویرایش شد!');
+  }
+
+  // دسترسی به فایل ضمیمه
+  if (message.raw.document) {
+    console.log(`سند: ${message.raw.document.file_name}`);
+  }
+});
+```
+
+### ۶.۴. `CallbackQuery` — کلیک روی دکمه شیشه‌ای
+
+```ts
 class CallbackQuery {
   readonly id: string;
   readonly from: User;
   readonly message?: Message;
   readonly data?: string;
+  readonly inlineMessageId?: string;
 
+  /** پاسخ به query (برای حذف حالت لودینگ) */
   answer(text?: string, showAlert?: boolean): Promise<boolean>;
+
+  /** ویرایش پیام متصل */
   editMessage(text: string): Promise<Message>;
 }
 ```
 
----
+**مثال:**
 
-## 6. Managers
+```ts
+client.on('callbackQuery', async (query) => {
+  // ⚠️ همیشه answer را صدا بزنید!
+  await query.answer('در حال پردازش...', false);
 
-Managers are available as properties on `BaleClient`.
+  switch (query.data) {
+    case 'products':
+      await query.editMessage('🛍 لیست محصولات...');
+      break;
 
-### MessageManager
+    case 'cart':
+      await query.editMessage('🛒 سبد خرید شما خالی است');
+      break;
 
-Accessed via `client.messages`.
-
-| Method                            | Description                                                                               |
-| :-------------------------------- | :---------------------------------------------------------------------------------------- |
-| `send(chatId, content, options?)` | Send a text message. `content` can be a string or a `BuiltMessage` from `MessageBuilder`. |
-| `edit(chatId, messageId, text)`   | Edit a sent message.                                                                      |
-| `delete(chatId, messageId)`       | Delete a message.                                                                         |
-
-```typescript
-await client.messages.send(chatId, 'Hello!', {
-  reply_markup: keyboard,
-  reply_to_message_id: someMessageId,
-});
-```
-
-### ChatManager
-
-Accessed via `client.chats`.
-
-| Method          | Description             |
-| :-------------- | :---------------------- |
-| `fetch(chatId)` | Fetch chat information. |
-
-```typescript
-const chat = await client.chats.fetch(chatId);
-console.log(chat.title);
-```
-
-### MediaManager
-
-Accessed via `client.media`.
-
-| Method                                  | Description                                   |
-| :-------------------------------------- | :-------------------------------------------- |
-| `sendPhoto(chatId, input, options?)`    | Send a photo.                                 |
-| `sendDocument(chatId, input, options?)` | Send a document.                              |
-| `sendVideo(chatId, input, options?)`    | Send a video.                                 |
-| `sendAudio(chatId, input, options?)`    | Send an audio file.                           |
-| `sendVoice(chatId, input, options?)`    | Send a voice message.                         |
-| `downloadFile(fileId)`                  | Download a file as `Buffer`.                  |
-| `getFileInfo(fileId)`                   | Get file metadata (`file_path`, `file_size`). |
-
-`input` can be a `file_id` string, an HTTP URL, or a `Buffer`/`Uint8Array`. See [Media & File Handling](#8-media--file-handling).
-
-### GroupManager
-
-Accessed via `client.groups`.
-
-| Method                                                | Description               |
-| :---------------------------------------------------- | :------------------------ |
-| `promote(chatId, userId, options)`                    | Promote a user to admin.  |
-| `ban(chatId, userId)`                                 | Ban a user.               |
-| `unban(chatId, userId)`                               | Unban a user.             |
-| `pinMessage(chatId, messageId, disableNotification?)` | Pin a message.            |
-| `unpinMessage(chatId, messageId)`                     | Unpin a specific message. |
-| `unpinAllMessages(chatId)`                            | Unpin all messages.       |
-| `createInviteLink(chatId, options?)`                  | Create an invite link.    |
-| `getMemberCount(chatId)`                              | Get member count.         |
-
-### PaymentManager
-
-Accessed via `client.payments`.
-
-| Method                                                     | Description                             |
-| :--------------------------------------------------------- | :-------------------------------------- |
-| `sendInvoice(chatId, invoice, options?)`                   | Send an invoice.                        |
-| `answerPreCheckout(preCheckoutQueryId, ok, errorMessage?)` | Approve or reject a pre-checkout query. |
-
----
-
-## 7. Builders
-
-Builders provide a fluent API for constructing complex payloads.
-
-### InlineKeyboardBuilder
-
-```typescript
-const keyboard = new InlineKeyboardBuilder()
-  .addButton('Products', { callback_data: 'products' })
-  .addButton('Cart', { callback_data: 'cart' })
-  .addButton('Visit site', { url: 'https://example.com', color: 'primary' })
-  .adjust(2, 1) // 2 buttons in row 1, 1 button in row 2
-  .build();
-```
-
-`addButton` accepts `url`, `callback_data`, `web_app`, and `color` (`'primary' | 'success' | 'danger'`).
-
-### ReplyKeyboardBuilder
-
-```typescript
-const menu = new ReplyKeyboardBuilder()
-  .addButton('Share contact', { request_contact: true })
-  .addButton('Terms')
-  .addButton('Help')
-  .adjust(1, 2)
-  .setOptions({ resize_keyboard: true, one_time_keyboard: true })
-  .build();
-```
-
-### MessageBuilder
-
-```typescript
-const message = new MessageBuilder()
-  .setText('Are you sure?')
-  .setKeyboard(inlineKeyboard)
-  .build();
-
-await client.messages.send(chatId, message);
-```
-
-### InvoiceBuilder
-
-```typescript
-const invoice = new InvoiceBuilder()
-  .setTitle('Premium subscription')
-  .setDescription('One month of premium access')
-  .setPayload('sub_1month')
-  .setProviderToken('YOUR_PROVIDER_TOKEN')
-  .setCurrency('IRR')
-  .addPrice('Monthly plan', 50000)
-  .requireName()
-  .build();
-```
-
----
-
-## 8. Media & File Handling
-
-`MediaManager` automatically detects the input type:
-
-| Input                   | Detection | Transport             |
-| :---------------------- | :-------- | :-------------------- |
-| `"AgACAgIAAxkBAAI..."`  | `file_id` | JSON                  |
-| `"https://..."`         | URL       | JSON                  |
-| `Buffer` / `Uint8Array` | Buffer    | `multipart/form-data` |
-
-**Sending a document from disk:**
-
-```typescript
-import { readFile } from 'node:fs/promises';
-
-const buffer = await readFile('./report.pdf');
-await client.media.sendDocument(chatId, buffer, {
-  caption: 'Annual report',
-});
-```
-
-**Downloading a received file:**
-
-```typescript
-client.on('messageCreate', async (message) => {
-  if (message.document) {
-    const buffer = await client.media.downloadFile(message.document.file_id);
-    await writeFile('./downloads/file.pdf', buffer);
+    case 'delete':
+      // فقط برای ادمین
+      if (query.from.id === ADMIN_ID) {
+        await query.message?.delete();
+      }
+      break;
   }
 });
 ```
 
+> ⚠️ **مهم:** اگر `answer()` را صدا نزنید، دکمه در کلاینت کاربر **در حالت لودینگ می‌ماند** و کاربر تجربه بدی خواهد داشت.
+
 ---
 
-## 9. Group Administration
+## ۷. مدیریت پیام‌ها
 
-```typescript
-// Promote a user
-await client.groups.promote(chatId, userId, {
-  can_delete_messages: true,
-  can_invite_users: true,
-  can_pin_messages: true,
+### `MessageManager` — دسترسی: `client.messages`
+
+```ts
+interface SendMessageOptions {
+  reply_markup?: InlineKeyboardMarkup | ReplyKeyboardMarkup;
+  reply_to_message_id?: number;
+}
+```
+
+| متد                               | توضیح                                                          |
+| :-------------------------------- | :------------------------------------------------------------- |
+| `send(chatId, content, options?)` | ارسال پیام — `content` می‌تواند `string` یا `BuiltMessage` باشد |
+| `edit(chatId, messageId, text)`   | ویرایش متن پیام                                                |
+| `delete(chatId, messageId)`       | حذف پیام                                                       |
+
+**مثال‌ها:**
+
+```ts
+// ارسال ساده
+await client.messages.send(chatId, 'سلام!');
+
+// ارسال با کیبورد شیشه‌ای
+const kb = new InlineKeyboardBuilder()
+  .addButton('بله', { callback_data: 'yes' })
+  .addButton('خیر', { callback_data: 'no' })
+  .build();
+
+await client.messages.send(chatId, 'ادامه می‌دهید؟', {
+  reply_markup: kb,
 });
 
-// Ban and unban
-await client.groups.ban(chatId, userId);
-await client.groups.unban(chatId, userId);
-
-// Invite link with limits
-const { invite_link } = await client.groups.createInviteLink(chatId, {
-  member_limit: 50,
-  expire_date: Math.floor(Date.now() / 1000) + 86400,
+// ارسال به‌صورت Reply
+await client.messages.send(chatId, 'در پاسخ به پیام شما', {
+  reply_to_message_id: message.id,
 });
+
+// ویرایش
+await client.messages.edit(chatId, messageId, 'متن جدید');
+
+// حذف
+await client.messages.delete(chatId, messageId);
+```
+
+### ارسال با `MessageBuilder`
+
+```ts
+import { MessageBuilder } from '@persian-caesar/bale.js';
+
+const kb = new InlineKeyboardBuilder()
+  .addButton('تأیید', { callback_data: 'confirm', color: 'success' })
+  .addButton('لغو', { callback_data: 'cancel', color: 'danger' })
+  .build();
+
+const built = new MessageBuilder()
+  .setText('آیا مطمئن هستید؟')
+  .setKeyboard(kb)
+  .build();
+
+await client.messages.send(chatId, built);
 ```
 
 ---
 
-## 10. Payments & Invoices
+## ۸. مدیریت رسانه
 
-**Sending an invoice:**
+### `MediaManager` — دسترسی: `client.media`
 
-```typescript
+| متد                                     | توضیح                       |
+| :-------------------------------------- | :-------------------------- |
+| `sendPhoto(chatId, input, options?)`    | ارسال عکس                   |
+| `sendDocument(chatId, input, options?)` | ارسال سند                   |
+| `sendVideo(chatId, input, options?)`    | ارسال ویدیو                 |
+| `sendAudio(chatId, input, options?)`    | ارسال فایل صوتی             |
+| `sendVoice(chatId, input, options?)`    | ارسال ویس                   |
+| `downloadFile(fileId)`                  | دانلود فایل به‌صورت `Buffer` |
+| `getFileInfo(fileId)`                   | دریافت اطلاعات فایل         |
+
+### ورودی‌های فایل (`FileInput`)
+
+| نوع ورودی               | تشخیص     | روش انتقال            |
+| :---------------------- | :-------- | :-------------------- |
+| `"AgACAgIA..."`         | `file_id` | JSON                  |
+| `"https://..."`         | URL       | JSON                  |
+| `Buffer` / `Uint8Array` | Buffer    | `multipart/form-data` |
+
+### گزینه‌های مشترک ارسال مدیا
+
+```ts
+interface SendMediaBaseOptions {
+  caption?: string;
+  parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML';
+  caption_entities?: MessageEntity[];
+  disable_notification?: boolean;
+  protect_content?: boolean;
+  reply_to_message_id?: number;
+  allow_sending_without_reply?: boolean;
+  reply_markup?: InlineKeyboardMarkup;
+}
+```
+
+### مثال‌ها
+
+**ارسال عکس از URL:**
+
+```ts
+await client.media.sendPhoto(chatId, 'https://example.com/cat.jpg', {
+  caption: 'یک گربه بامزه 😺',
+});
+```
+
+**ارسال سند از دیسک:**
+
+```ts
+import { readFile } from 'node:fs/promises';
+
+const buffer = await readFile('./report.pdf');
+await client.media.sendDocument(chatId, buffer, {
+  caption: 'گزارش سالانه',
+});
+```
+
+**ارسال ویدیو با `file_id` (سریع‌ترین روش):**
+
+```ts
+// بار اول آپلود کنید و file_id را ذخیره کنید
+await client.media.sendVideo(chatId, 'AgACAgIAAxkBAAI...', {
+  caption: 'ویدیوی آموزشی',
+  duration: 120,
+  supports_streaming: true,
+});
+```
+
+**دانلود فایل دریافتی:**
+
+```ts
+client.on('messageCreate', async (message) => {
+  const doc = message.raw.document;
+  if (!doc) return;
+
+  const buffer = await client.media.downloadFile(doc.file_id);
+
+  const fileName = `downloads/${Date.now()}_${doc.file_name ?? 'file'}`;
+  await writeFile(fileName, buffer);
+  await message.reply(`✅ ذخیره شد: ${fileName}`);
+});
+```
+
+**مقایسه `file_id` با Buffer:**
+
+| روش       | سرعت        | اندازه درخواست   | توصیه                            |
+| :-------- | :---------- | :--------------- | :------------------------------- |
+| `file_id` | ⚡ خیلی سریع | کوچک (~100 بایت) | **توصیه‌شده** برای فایل‌های تکراری |
+| URL       | 🚀 سریع      | کوچک             | وقتی فایل روی CDN است            |
+| Buffer    | 🐢 کند       | بزرگ (کل فایل)   | فقط بار اول                      |
+
+---
+
+## ۹. مدیریت گروه
+
+### `GroupManager` — دسترسی: `client.groups`
+
+```ts
+interface PromoteOptions {
+  can_change_info?: boolean;
+  can_delete_messages?: boolean;
+  can_invite_users?: boolean;
+  can_restrict_members?: boolean;
+  can_pin_messages?: boolean;
+  can_promote_members?: boolean;
+}
+
+interface InviteLinkOptions {
+  expire_date?: number;   // unix timestamp
+  member_limit?: number;  // حداکثر تعداد اعضا
+}
+```
+
+| متد                                                   | توضیح           |
+| :---------------------------------------------------- | :-------------- |
+| `promote(chatId, userId, options)`                    | ارتقا به ادمین  |
+| `ban(chatId, userId)`                                 | مسدود کردن      |
+| `unban(chatId, userId)`                               | رفع مسدودی      |
+| `pinMessage(chatId, messageId, disableNotification?)` | سنجاق پیام      |
+| `unpinMessage(chatId, messageId)`                     | حذف سنجاق       |
+| `unpinAllMessages(chatId)`                            | حذف همه سنجاق‌ها |
+| `createInviteLink(chatId, options?)`                  | ساخت لینک دعوت  |
+| `getMemberCount(chatId)`                              | تعداد اعضا      |
+
+### مثال‌ها
+
+**ارتقا به ادمین با دسترسی محدود:**
+
+```ts
+await client.groups.promote(chatId, userId, {
+  can_delete_messages: true,
+  can_invite_users: true,
+  can_pin_messages: false,  // نمی‌تواند سنجاق کند
+});
+```
+
+**لیست سیاه (Blacklist):**
+
+```ts
+client.on('messageCreate', async (message) => {
+  if (!message.chat.isGroup) return;
+
+  const BANNED = [12345, 67890];
+  if (message.from && BANNED.includes(message.from.id)) {
+    await client.groups.ban(message.chat.id, message.from.id);
+    await message.delete();
+    await message.chat.send(`⛔ ${message.from.fullName} مسدود شد`);
+  }
+});
+```
+
+**ساخت لینک دعوت یک‌بارمصرف (۲۴ ساعته، ۵۰ نفر):**
+
+```ts
+const { invite_link } = await client.groups.createInviteLink(chatId, {
+  member_limit: 50,
+  expire_date: Math.floor(Date.now() / 1000) + 86400,
+});
+
+await client.messages.send(chatId, `لینک دعوت: ${invite_link}`);
+```
+
+---
+
+## ۱۰. پرداخت و فاکتور
+
+### `PaymentManager` — دسترسی: `client.payments`
+
+### `InvoiceBuilder` — ساخت فاکتور
+
+```ts
 const invoice = new InvoiceBuilder()
-  .setTitle('Premium')
-  .setDescription('One-month subscription')
-  .setPayload('premium_1m')
+  .setTitle('اشتراک ویژه')
+  .setDescription('دسترسی یک‌ماهه به امکانات ویژه')
+  .setPayload('sub_1month')                  // شناسه داخلی سفارش
   .setProviderToken(process.env.PROVIDER_TOKEN!)
   .setCurrency('IRR')
-  .addPrice('Subscription', 100000)
-  .requireEmail()
+  .addPrice('اشتراک یک‌ماهه', 50000)
+  .addPrice('مالیات', 4500)
+  .requireName()                             // نام کاربر را بگیر
+  .requireEmail()                            // ایمیل کاربر را بگیر
   .build();
 
 await client.payments.sendInvoice(chatId, invoice);
 ```
 
-**Handling pre-checkout queries:**
+### پاسخ به `PreCheckoutQuery`
 
-```typescript
+Bale قبل از کسر وجه، یک `pre_checkout_query` می‌فرستد. باید تأیید یا رد کنید:
+
+```ts
 client.on('preCheckoutQuery', async (query) => {
-  // Validate the order, then approve
-  await client.payments.answerPreCheckout(query.id, true);
+  // اعتبارسنجی سفارش
+  const payload = query.invoice_payload;
+  const amount = query.total_amount;
+
+  if (payload === 'sub_1month' && amount === 50000) {
+    await client.payments.answerPreCheckout(query.id, true);
+  } else {
+    await client.payments.answerPreCheckout(
+      query.id,
+      false,
+      'مبلغ با انتظار مطابقت ندارد',
+    );
+  }
 });
 ```
 
-> **Note:** The `preCheckoutQuery` event is available on `BaleClient` (the `Update` type includes `pre_checkout_query`).
+> ⚠️ **مهم:** اگر `answerPreCheckout` را صدا نزنید، پرداخت در حالت معلق می‌ماند و کاربر تجربه بدی خواهد داشت.
+
+### پرداخت موفق
+
+```ts
+client.on('messageCreate', async (message) => {
+  const payment = message.raw.successful_payment;
+  if (!payment) return;
+
+  await message.reply(`✅ پرداخت ${payment.total_amount} ${payment.currency} موفق بود!`);
+  // دسترسی را فعال کن...
+});
+```
 
 ---
 
-## 11. Web Apps (Mini Apps)
+## ۱۱. بیلدرها (Builders)
 
-Add a mini-app button to an inline keyboard:
+بیلدرها **توابع خالص** برای ساخت payload هستند. شبکه را لمس نمی‌کنند و همیشه یک شیء ساده برمی‌گردانند.
 
-```typescript
-const keyboard = new InlineKeyboardBuilder()
-  .addButton('Open shop', { web_app: { url: 'https://shop.example.com' } })
+### `InlineKeyboardBuilder` — کیبورد شیشه‌ای
+
+```ts
+interface InlineButtonOptions {
+  url?: string;
+  callback_data?: string;
+  web_app?: { url: string };
+  color?: 'primary' | 'success' | 'danger';
+}
+
+class InlineKeyboardBuilder {
+  addButton(text: string, options?: InlineButtonOptions): this;
+  addRow(...buttons: InlineKeyboardButton[]): this;
+  adjust(...sizes: number[]): this;
+  build(): InlineKeyboardMarkup;
+}
+```
+
+**مثال‌ها:**
+
+```ts
+// ساده
+const kb = new InlineKeyboardBuilder()
+  .addButton('بله', { callback_data: 'yes' })
+  .addButton('خیر', { callback_data: 'no' })
+  .build();
+// نتیجه: یک ردیف با دو دکمه
+
+// چیدمان چندردیفی
+const kb = new InlineKeyboardBuilder()
+  .addButton('A')
+  .addButton('B')
+  .addButton('C')
+  .adjust(2, 1)
+  .build();
+// نتیجه: [A, B] / [C]
+
+// ردیف دستی
+const kb = new InlineKeyboardBuilder()
+  .addRow({ text: 'ردیف ۱', callback_data: 'r1' }, { text: 'ردیف ۱', url: 'https://...' })
+  .addRow({ text: 'ردیف ۲', callback_data: 'r2' })
   .build();
 ```
 
-When the user finishes interacting with the mini app, Bale sends a message with `web_app_data`. Listen for it:
+**⚠️ نکته مهم:** یک دکمه **نمی‌تواند هم‌زمان `url` و `callback_data` داشته باشد**. Bale خطا می‌دهد.
 
-```typescript
-client.on('webAppData', (payload) => {
-  console.log('Data from mini app:', payload.data);
-  console.log('Button text:', payload.buttonText);
+### `ReplyKeyboardBuilder` — کیبورد سفارشی
+
+```ts
+interface ReplyButtonOptions {
+  request_contact?: boolean;
+  request_location?: boolean;
+}
+
+interface ReplyKeyboardOptions {
+  resize_keyboard?: boolean;
+  one_time_keyboard?: boolean;
+  selective?: boolean;
+}
+
+class ReplyKeyboardBuilder {
+  addButton(text: string, options?: ReplyButtonOptions): this;
+  addRow(...buttons: KeyboardButton[]): this;
+  adjust(...sizes: number[]): this;
+  setOptions(options: ReplyKeyboardOptions): this;
+  build(): ReplyKeyboardMarkup;
+}
+```
+
+**مثال:**
+
+```ts
+const menu = new ReplyKeyboardBuilder()
+  .addButton('📱 ارسال شماره', { request_contact: true })
+  .addButton('📍 ارسال موقعیت', { request_location: true })
+  .addButton('📄 شرایط و قوانین')
+  .addButton('❓ راهنما')
+  .adjust(1, 1, 2)
+  .setOptions({
+    resize_keyboard: true,       // اندازه کوچک‌تر
+    one_time_keyboard: true,     // بعد از یک بار، مخفی شود
+  })
+  .build();
+
+await client.messages.send(chatId, 'انتخاب کنید:', {
+  reply_markup: menu,
 });
 ```
 
+### `MessageBuilder`
+
+```ts
+const built = new MessageBuilder()
+  .setText('سلام!')
+  .setKeyboard(kb)
+  .build();
+// نتیجه: { text: 'سلام!', reply_markup: kb }
+
+await client.messages.send(chatId, built);
+```
+
+**محدودیت:** اگر `text` خالی باشد، `build()` خطا می‌دهد.
+
+### `InvoiceBuilder` — جدول کامل
+
+| متد                |    الزامی؟    | توضیح        |
+| :----------------- | :-----------: | :----------- |
+| `setTitle`         |       ✅       | عنوان        |
+| `setDescription`   |       ✅       | توضیحات      |
+| `setPayload`       |       ✅       | شناسه داخلی  |
+| `setProviderToken` |       ✅       | توکن درگاه   |
+| `setCurrency`      |       ✅       | ارز (IRR)    |
+| `addPrice`         | ✅ (حداقل یکی) | آیتم قیمت    |
+| `setPhotoUrl`      |       ❌       | عکس محصول    |
+| `requireName`      |       ❌       | نام خریدار   |
+| `requirePhone`     |       ❌       | تلفن خریدار  |
+| `requireEmail`     |       ❌       | ایمیل خریدار |
+
+`build()` اگر فیلدهای الزامی خالی باشند، خطا می‌دهد.
+
+### `web_app` — دکمه مینی‌اپ
+
+```ts
+const kb = new InlineKeyboardBuilder()
+  .addButton('🛍 باز کردن فروشگاه', {
+    web_app: { url: 'https://shop.example.com' },
+  })
+  .build();
+```
+
+وقتی کاربر دکمه را می‌زند، مینی‌اپ باز می‌شود. داده‌ای که مینی‌اپ برمی‌گرداند، در رویداد `webAppData` دریافت می‌شود:
+
+```ts
+client.on('webAppData', (payload) => {
+  console.log('داده:', payload.data);
+  console.log('متن دکمه:', payload.buttonText);
+  console.log('کاربر:', payload.message.from?.fullName);
+});
+```
+
+> 💡 **نکته:** دکمه‌های `web_app` فقط در **چت خصوصی** با ربات کار می‌کنند (محدودیت Bale).
+
 ---
 
-## 12. Error Handling
+## ۱۲. مدیریت خطا
 
-All API errors are thrown as `BaleAPIError`:
+همه خطاهای API به‌صورت `BaleAPIError` پرتاب می‌شوند:
 
-```typescript
+```ts
 import { BaleAPIError } from '@persian-caesar/bale.js';
 
 try {
-  await client.messages.send(chatId, 'Hello');
+  await client.messages.send(chatId, 'سلام');
 } catch (err) {
   if (err instanceof BaleAPIError) {
-    console.error('API error:', err.code, err.message);
+    console.error(`خطای API [${err.code}]: ${err.message}`);
+
     if (err.code === 429) {
       const retryAfter = err.parameters?.retry_after ?? 1;
-      // retry after `retryAfter` seconds
+      await delay(retryAfter * 1000);
+      // دوباره تلاش کن...
+    }
+
+    if (err.code === 403) {
+      // ربات از چت مسدود شده
     }
   } else {
-    // network or parsing error
+    // خطای شبکه، پارس JSON، ...
+    console.error('خطای غیرمنتظره:', err);
   }
 }
 ```
 
-The `PollingManager` automatically handles `429 Too Many Requests` by respecting `retry_after`.
+### جدول کدهای رایج Bale
 
----
+| کد   | معنا          | راه‌حل                           |
+| :--- | :------------ | :------------------------------ |
+| 400  | درخواست بد    | پارامترها را بررسی کن           |
+| 401  | توکن نامعتبر  | توکن را چک کن                   |
+| 403  | دسترسی ندارید | ربات ادمین نیست یا مسدود شده    |
+| 404  | پیدا نشد      | `chat_id`/`message_id` را چک کن |
+| 429  | زیاد از حد    | `retry_after` را رعایت کن       |
 
-## 13. TypeScript Types
+### الگوی Retry (تلاش مجدد)
 
-All API types are exported from the package root:
+```ts
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+): Promise<T> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err instanceof BaleAPIError && err.code === 429) {
+        const wait = (err.parameters?.retry_after ?? 1) * 1000;
+        await delay(wait);
+        continue;
+      }
+      if (i === maxAttempts - 1) throw err;
+      await delay(1000 * 2 ** i); // exponential backoff
+    }
+  }
+  throw new Error('unreachable');
+}
 
-```typescript
-import type {
-  User,
-  Chat,
-  Message,
-  Update,
-  CallbackQuery,
-  InlineKeyboardMarkup,
-  InlineKeyboardButton,
-  ReplyKeyboardMarkup,
-  InvoicePayload,
-  BaleFile,
-} from '@persian-caesar/bale.js';
+// استفاده
+await withRetry(() => client.messages.send(chatId, 'سلام'));
 ```
 
-The project uses `strict` mode, `noUncheckedIndexedAccess`, and `noImplicitOverride`. If you extend the library, follow the same settings.
+### `Collection` برای مدیریت کش
 
----
-
-## 14. Utility: Collection
-
-A lightweight `Map` subclass inspired by discord.js:
-
-```typescript
+```ts
 import { Collection } from '@persian-caesar/bale.js';
 
-const cache = new Collection<number, string>();
-cache.set(1, 'Hello');
-cache.first(); // 'Hello'
-cache.filter((v) => v.startsWith('H')); // Collection
+const userCache = new Collection<number, User>();
+
+client.on('messageCreate', (message) => {
+  if (!message.from) return;
+  if (!userCache.has(message.from.id)) {
+    userCache.set(message.from.id, message.from);
+    console.log(`کاربر جدید! مجموع: ${userCache.size}`);
+  }
+});
 ```
 
 ---
 
-## 15. Deployment & GitHub Pages
+## ۱۳. ابزارهای کمکی (Collection)
 
-This documentation is published via **GitHub Pages** at:
+`Collection` یک `Map` توسعه‌یافته است، مشابه `discord.js`:
 
-**https://Persian-Caesar.github.io/bale.js**
+```ts
+import { Collection } from '@persian-caesar/bale.js';
 
-To update it:
+const col = new Collection<string, number>([
+  ['a', 1],
+  ['b', 2],
+  ['c', 3],
+]);
 
-1. Edit `docs/README.md` (this file) in the repository.
-2. Commit and push to the `main` branch.
-3. In **Settings → Pages**, ensure the source is set to **Deploy from a branch** → `main` → `/docs`.
-4. GitHub will rebuild the site automatically.
+col.first();       // 1
+col.last();        // 3
+col.toArray();     // [1, 2, 3]
+col.toKeyArray();  // ['a', 'b', 'c']
+col.filter((v) => v > 1);  // Collection { b: 2, c: 3 }
+col.map((v) => v * 2);     // [2, 4, 6]
+```
 
-For a richer experience, you can serve the `docs/` folder with **Docsify** or **Nextra** (both work with plain Markdown). The full API reference generated by **TypeDoc** lives in `docs/api/` after running `npm run docs` — you can publish it alongside this guide.
+### موارد استفاده
+
+```ts
+// کش کاربران
+const users = new Collection<number, User>();
+
+// کش مکالمات
+interface ConversationState {
+  step: 'name' | 'email' | 'done';
+  data: { name?: string; email?: string };
+}
+const conversations = new Collection<number, ConversationState>();
+
+client.on('messageCreate', async (message) => {
+  if (!message.from || !message.text) return;
+  const userId = message.from.id;
+
+  if (message.text === '/start') {
+    conversations.set(userId, { step: 'name', data: {} });
+    await message.reply('اسمت چیه؟');
+    return;
+  }
+
+  const conv = conversations.get(userId);
+  if (!conv) return;
+
+  switch (conv.step) {
+    case 'name':
+      conv.data.name = message.text;
+      conv.step = 'email';
+      await message.reply('ایمیلت چیه؟');
+      break;
+
+    case 'email':
+      conv.data.email = message.text;
+      conv.step = 'done';
+      await message.reply(`ممنون ${conv.data.name}!`);
+      conversations.delete(userId);
+      break;
+  }
+});
+```
 
 ---
 
-## 16. FAQ
+## ۱۴. الگوهای طراحی و بهترین شیوه‌ها
 
-**Q: Does `bale.js` work with both polling and webhooks?**  
-Yes. Set `mode: 'polling'` or `mode: 'webhook'` in the client options. They are mutually exclusive on Bale's side — if a webhook is registered, `getUpdates` will not return data.
+### ۱۴.۱. سازماندهی کد — الگوی Router
 
-**Q: Can I use `bale.js` with JavaScript (not TypeScript)?**  
-Yes. The package ships compiled JavaScript and type definitions. You get full IntelliSense in editors that support JSDoc and `.d.ts` files.
+پروژه را به فایل‌های کوچک تقسیم کنید:
 
-**Q: How do I get a bot token?**  
-Create a bot via [Bale's BotFather](https://ble.ir/botfather) and copy the token it gives you.
+```
+src/
+├── index.ts
+├── client.ts
+├── handlers/
+│   ├── start.ts
+│   ├── echo.ts
+│   └── admin.ts
+└── utils/
+    └── logger.ts
+```
 
-**Q: What happens if my bot goes offline for more than 24 hours?**  
-Bale deletes updates older than 24 hours, so messages sent while the bot was offline are lost. Use webhooks with a reliable server if uptime is critical.
+```ts
+// handlers/start.ts
+import type { Message } from '@persian-caesar/bale.js';
+import { InlineKeyboardBuilder } from '@persian-caesar/bale.js';
 
-**Q: Is the API base URL configurable?**  
-The base URL is fixed to `https://tapi.bale.ai/bot<token>/METHOD_NAME`, as specified by Bale's official API docs.
+export async function handleStart(message: Message) {
+  const kb = new InlineKeyboardBuilder()
+    .addButton('🛍 محصولات', { callback_data: 'products' })
+    .build();
 
-**Q: Where can I report bugs or request features?**  
-Open an issue on the [GitHub repository](https://github.com/Persian-Caesar/bale.js) and follow the guidelines in `CONTRIBUTING.md`.
+  await message.reply('به ربات خوش آمدید! 👋', { reply_markup: kb });
+}
+```
+
+```ts
+// client.ts
+import { handleStart } from './handlers/start.js';
+import { handleEcho } from './handlers/echo.js';
+
+client.on('messageCreate', async (message) => {
+  switch (message.text) {
+    case '/start': return handleStart(message);
+    case '/echo':  return handleEcho(message);
+    // ...
+  }
+});
+```
+
+### ۱۴.۲. حالت‌های مکالمه (Conversation State)
+
+```ts
+type Step = 'idle' | 'awaiting_name' | 'awaiting_phone';
+const states = new Collection<number, Step>();
+
+client.on('messageCreate', async (message) => {
+  const state = states.get(message.from!.id) ?? 'idle';
+
+  if (state === 'awaiting_name') {
+    await message.reply(`سلام ${message.text}!`);
+    states.set(message.from!.id, 'awaiting_phone');
+    return;
+  }
+
+  if (state === 'awaiting_phone') {
+    // ...
+  }
+});
+```
+
+### ۱۴.۳. لاگ و دیباگ
+
+```ts
+const DEBUG = process.env.DEBUG === 'true';
+
+function log(...args: unknown[]) {
+  if (DEBUG) console.log('[debug]', ...args);
+}
+
+client.on('messageCreate', (message) => {
+  log('پیام جدید:', message.id, message.text);
+});
+```
+
+### ۱۴.۴. جداسازی توکن و تنظیمات
+
+```ts
+// config.ts
+export const config = {
+  token: process.env.BALE_TOKEN!,
+  adminId: Number(process.env.ADMIN_ID),
+  mode: (process.env.MODE ?? 'polling') as 'polling' | 'webhook',
+};
+
+if (!config.token) {
+  throw new Error('BALE_TOKEN تنظیم نشده!');
+}
+```
+
+### ۱۴.۵. دسته‌بندی خطاها
+
+```ts
+function isUserError(err: unknown): boolean {
+  return err instanceof BaleAPIError && [400, 403, 404].includes(err.code);
+}
+
+client.on('messageCreate', async (message) => {
+  try {
+    await handleMessage(message);
+  } catch (err) {
+    if (isUserError(err)) {
+      await message.reply('متأسفانه درخواست شما نامعتبر بود.').catch(() => {});
+    } else {
+      console.error('خطای جدی:', err);
+    }
+  }
+});
+```
+
+### ۱۴.۶. الگوی Graceful Shutdown
+
+```ts
+process.on('SIGTERM', async () => {
+  console.log('در حال خاموشی...');
+  await client.destroy();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  await client.destroy();
+  process.exit(0);
+});
+```
+
+### ۱۴.۷. حفظ حالت بین ریستارت‌ها
+
+اگر ربات ریستارت شود، `offset` polling و states از بین می‌روند. از یک ذخیره‌گاه استفاده کنید:
+
+```ts
+// با فایل
+const STATE_FILE = './state.json';
+const state = JSON.parse(await readFile(STATE_FILE, 'utf-8').catch(() => '{}'));
+
+setInterval(async () => {
+  await writeFile(STATE_FILE, JSON.stringify({
+    offset: (client as any).pollingManager?.offset,
+    conversations: Object.fromEntries(conversations),
+  }));
+}, 30_000);
+```
 
 ---
 
-## License
+## ۱۵. عیب‌یابی
 
-MIT © 2025 bale.js contributors. See [LICENSE](../LICENSE) for details.
+### ❌ "Webhook is already set"
+
+**علت:** قبلاً یک webhook ثبت شده و polling را قطع کرده.
+
+**راه‌حل:**
+
+```ts
+await client.rest.deleteWebhook();
+```
+
+### ❌ "Forbidden: bot was blocked by the user"
+
+**علت:** کاربر ربات را بلاک کرده.
+
+**راه‌حل:** کاربر را از لیست فعال حذف کنید.
+
+```ts
+client.on('messageCreate', async (message) => {
+  try {
+    await message.reply('...');
+  } catch (err) {
+    if (err instanceof BaleAPIError && err.code === 403) {
+      // این کاربر ربات را بلاک کرده — از لیست حذف کن
+      activeUsers.delete(message.from!.id);
+    }
+  }
+});
+```
+
+### ❌ دکمه‌ها در حالت لودینگ گیر کرده‌اند
+
+**علت:** `query.answer()` را صدا نزده‌اید.
+
+**راه‌حل:**
+
+```ts
+client.on('callbackQuery', async (query) => {
+  try {
+    // منطق شما
+  } finally {
+    await query.answer().catch(() => {}); // همیشه answer
+  }
+});
+```
+
+### ❌ "message is too long"
+
+**علت:** متن پیام از ۴۰۹۶ کاراکتر بیشتر است.
+
+**راه‌حل:** متن را تقسیم کنید:
+
+```ts
+async function sendLong(chatId: number, text: string) {
+  const CHUNK = 4000;
+  for (let i = 0; i < text.length; i += CHUNK) {
+    await client.messages.send(chatId, text.slice(i, i + CHUNK));
+  }
+}
+```
+
+### ❌ پاسخ‌ها در گروه تکرار می‌شوند
+
+**علت:** ربات به پیام خودش پاسخ می‌دهد.
+
+**راه‌حل:** بررسی کنید `from.isBot === false`:
+
+```ts
+client.on('messageCreate', (message) => {
+  if (message.from?.isBot) return;
+  // ...
+});
+```
+
+### ❌ "offset is not incremented"
+
+**علت:** در حالت polling، اگر offset را درست ذخیره نکنید، آپدیت‌ها دوباره دریافت می‌شوند.
+
+**راه‌حل:** `PollingManager` خودش این کار را می‌کند. اگر خودتان `getUpdates` صدا می‌زنید:
+
+```ts
+const updates = await client.rest.getUpdates({ offset });
+for (const u of updates) {
+  offset = u.update_id + 1;
+  client.dispatchUpdate(u);
+}
+```
+
+---
+
+## ۱۶. سوالات متداول
+
+**Q: آیا bale.js هم در JavaScript کار می‌کند؟**
+
+بله. پکیج شامل JavaScript کامپایل‌شده + تعریف‌های TypeScript است. در JS از IntelliSense کامل بهره‌مند می‌شوید.
+
+**Q: تفاوت polling و webhook چیست؟**
+
+- **Polling:** ربات خودش مدام از Bale می‌پرسد «آپدیت جدید داری؟» — ساده‌تر، برای توسعه.
+- **Webhook:** Bale به سرور شما POST می‌زند — سریع‌تر و کم‌مصرف‌تر، برای production.
+
+**Q: آیا می‌توانم هم‌زمان polling و webhook داشته باشم؟**
+
+**نه.** در سمت Bale متقابلاً انحصاری هستند. اگر webhook ثبت باشد، `getUpdates` چیزی برنمی‌گرداند.
+
+**Q: چطور به فایل‌های دریافتی دسترسی داشته باشم؟**
+
+از `message.raw` (داده خام API) استفاده کنید:
+
+```ts
+const doc = message.raw.document;
+const photo = message.raw.photo;  // آرایه‌ای از سایزها
+const voice = message.raw.voice;
+```
+
+**Q: آیا می‌توانم از Express به‌جای حالت webhook استفاده کنم؟**
+
+بله، `dispatchUpdate` را در route خود صدا بزنید:
+
+```ts
+app.post('/bale', (req, res) => {
+  client.dispatchUpdate(req.body);
+  res.sendStatus(200);
+});
+```
+
+**Q: بهترین روش برای ذخیره توکن چیست؟**
+
+متغیر محیطی (`.env`) + هرگز در Git commit نکنید. برای production از secret manager (AWS Secrets، Vault و…) استفاده کنید.
+
+**Q: آیا از ESM پشتیبانی می‌شود؟**
+
+کتابخانه با `module: commonjs` ساخته شده. برای import در پروژه ESM از `require` یا `createRequire` استفاده کنید. آینده‌ای نزدیک احتمالاً ESM بومی هم اضافه می‌شود.
+
+**Q: چطور پیام طولانی بفرستم؟**
+
+باید دستی تقسیم کنید (حداکثر ۴۰۹۶ کاراکتر). به [بخش عیب‌یابی](#-message-is-too-long) مراجعه کنید.
+
+**Q: rate limit چقدر است؟**
+
+Bale محدودیت رسمی اعلام نکرده، اما در عمل مشابه Telegram است (۳۰ پیام/ثانیه به کاربران مختلف، ۱ پیام/ثانیه به یک چت). `PollingManager` کدهای 429 را خودکار مدیریت می‌کند، اما برای ارسال‌های خودتان با `withRetry` مدیریت کنید.
+
+**Q: چطور ربات را در سرور deploy کنم؟**
+
+بخش [الگوی Graceful Shutdown](#۱۴۶-الگوی-graceful-shutdown) و [حالت Webhook](#حالت-webhook--کی-و-چطور) را ببینید. برای Docker:
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY dist ./dist
+CMD ["node", "dist/index.js"]
+```
+
+---
+
+## ۱۷. سهم در توسعه
+
+ما از هر نوع مشارکت استقبال می‌کنیم — گزارش باگ، درخواست ویژگی، بهبود مستندات، یا کد.
+
+### راهنمای سریع
+
+1. **ریپازیتوری را fork و clone کنید:**
+   ```bash
+   git clone https://github.com/<your-username>/bale.js.git
+   cd bale.js
+   git remote add upstream https://github.com/Persian-Caesar/bale.js.git
+   ```
+
+2. **وابستگی‌ها را نصب کنید:**
+   ```bash
+   npm ci
+   ```
+
+3. **قبل از هر PR، اعتبارسنجی کامل:**
+   ```bash
+   npm run lint && npm run build && npm run test:coverage
+   ```
+
+4. **از Conventional Commits استفاده کنید:**
+   ```
+   feat(builders): add InvoiceBuilder with fluent API
+   fix(rest): handle multipart upload with zero-length buffers
+   docs: document MediaManager.downloadFile
+   ```
+
+### اسکریپت‌های موجود
+
+| دستور                   | توضیح                         |
+| :---------------------- | :---------------------------- |
+| `npm run build`         | کامپایل TypeScript به `dist/` |
+| `npm run dev`           | حالت watch                    |
+| `npm run lint`          | ESLint                        |
+| `npm run format`        | Prettier روی `src/`           |
+| `npm test`              | اجرای تست‌ها                   |
+| `npm run test:coverage` | تست + گزارش پوشش              |
+| `npm run docs`          | تولید TypeDoc                 |
+
+### اصول معماری (رعایت کنید)
+
+1. **Structures** فقط‌خواندنی — منطق پیچیده در Managers.
+2. **Managers** تنها جای تماس با API — هیچ `client.rest.request()` خارج از Manager نباشد.
+3. **Builders** خالص — شبکه را لمس نکنند.
+4. **BaleClient** فقط هماهنگ‌کننده — منطق کسب‌وکار در آن نباشد.
+5. **RESTManager** تنها لایه شبکه.
+
+### Code Style
+
+- TypeScript `strict` — بدون استثنا
+- `import type` برای type-only imports
+- `.js` extension در importها (سازگاری با NodeNext)
+- JSDoc برای همه APIهای عمومی
+- Prettier: 2 spaces، single quotes، semicolons، 100 char
+
+جزئیات کامل در [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
+## 📎 پیوست: خلاصه API
+
+### کلاس‌ها
+
+| کلاس                    | محل           | توضیح                |
+| :---------------------- | :------------ | :------------------- |
+| `BaleClient`            | `client/`     | نقطه ورود            |
+| `RESTManager`           | `rest/`       | لایه شبکه            |
+| `BaleAPIError`          | `rest/`       | خطای API             |
+| `User`                  | `structures/` | کاربر                |
+| `Chat`                  | `structures/` | چت                   |
+| `Message`               | `structures/` | پیام                 |
+| `CallbackQuery`         | `structures/` | کلیک دکمه            |
+| `TypedEmitter`          | `structures/` | EventEmitter تایپ‌شده |
+| `MessageManager`        | `managers/`   | پیام‌ها               |
+| `ChatManager`           | `managers/`   | چت‌ها                 |
+| `MediaManager`          | `managers/`   | رسانه                |
+| `GroupManager`          | `managers/`   | گروه                 |
+| `PaymentManager`        | `managers/`   | پرداخت               |
+| `PollingManager`        | `managers/`   | polling              |
+| `WebhookManager`        | `managers/`   | webhook              |
+| `InlineKeyboardBuilder` | `builders/`   | کیبورد شیشه‌ای        |
+| `ReplyKeyboardBuilder`  | `builders/`   | کیبورد سفارشی        |
+| `MessageBuilder`        | `builders/`   | پیام                 |
+| `InvoiceBuilder`        | `builders/`   | فاکتور               |
+| `Collection`            | `util/`       | Map توسعه‌یافته       |
+
+### نمونه کامل پروژه
+
+```ts
+// index.ts
+import 'dotenv/config';
+import {
+  BaleClient,
+  InlineKeyboardBuilder,
+  Collection,
+  BaleAPIError,
+} from '@persian-caesar/bale.js';
+
+const client = new BaleClient({
+  token: process.env.BALE_TOKEN!,
+  mode: 'polling',
+  polling: { timeout: 30, limit: 100 },
+});
+
+const conversations = new Collection<number, { step: string }>();
+
+client.on('ready', (me) => {
+  console.log(`✅ @${me.username} آماده است`);
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.from?.isBot) return;
+
+  try {
+    if (message.text === '/start') {
+      const kb = new InlineKeyboardBuilder()
+        .addButton('📝 ثبت‌نام', { callback_data: 'signup' })
+        .addButton('❓ راهنما', { callback_data: 'help' })
+        .build();
+
+      await message.reply('خوش آمدید!', { reply_markup: kb });
+      return;
+    }
+
+    if (message.hasText) {
+      await message.reply(`دریافت شد: ${message.text}`);
+    }
+  } catch (err) {
+    if (err instanceof BaleAPIError) {
+      console.error(`[${err.code}] ${err.message}`);
+    } else {
+      console.error(err);
+    }
+  }
+});
+
+client.on('callbackQuery', async (query) => {
+  try {
+    if (query.data === 'signup') {
+      await query.editMessage('لطفاً نام خود را وارد کنید:');
+      conversations.set(query.from.id, { step: 'name' });
+    } else if (query.data === 'help') {
+      await query.editMessage('برای کمک با پشتیبانی تماس بگیرید.');
+    }
+  } finally {
+    await query.answer().catch(() => {});
+  }
+});
+
+client.on('error', (err) => {
+  console.error('[bale.js]', err);
+});
+
+process.on('SIGINT', async () => {
+  await client.destroy();
+  process.exit(0);
+});
+
+client.login();
+```
+
+---
+
+**MIT License** © 2026 Sobhan Rasoulzadeh Asl — ساخته‌شده با ❤️ برای جامعه فارسی‌زبان
+
+> اگر این مستندات کمک کرد، به پروژه ⭐ دهید. مشارکت شما ارزشمند است!
