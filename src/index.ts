@@ -21,6 +21,11 @@ export * from './builders/MessageBuilder';
 export * from './types/media';
 export * from './managers/MediaManager';
 
+export * from './structures/CallbackQuery';
+export * from './managers/GroupManager';
+export * from './managers/PaymentManager';
+export * from './builders/InvoiceBuilder';
+
 export * from './client/BaleClient';
 
 export * from './util/Collection';

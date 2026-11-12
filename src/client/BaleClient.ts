@@ -1,17 +1,17 @@
-import type {
-    Update,
-    CallbackQuery
-} from '../types/update';
+import type { ClientEvents } from '../types/events';
 import { MessageManager } from '../managers/MessageManager';
 import { PollingManager } from '../managers/PollingManager';
 import { WebhookManager } from '../managers/WebhookManager';
+import { CallbackQuery } from '../structures/CallbackQuery';
+import { TypedEmitter } from '../structures/TypedEmitter';
+import { MediaManager } from '../managers/MediaManager';
 import type { APIUser } from '../types/user';
+import type { Update } from '../types/update';
 import { ChatManager } from '../managers/ChatManager';
 import { RESTManager } from '../rest/RESTManager';
 import { Message } from '../structures/Message';
-import { TypedEmitter } from '../structures/TypedEmitter';
-import type { ClientEvents } from '../types/events';
-import { MediaManager } from '../managers/MediaManager';
+import { PaymentManager } from '../managers/PaymentManager';
+import { GroupManager } from '../managers/GroupManager';
 
 export type ClientMode = 'polling' | 'webhook';
 
@@ -58,6 +58,9 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
 
     public readonly media: MediaManager;
 
+    public readonly groups: GroupManager;
+    public readonly payments: PaymentManager;
+
     constructor(options: BaleClientOptions) {
         super();
         this.token = options.token;
@@ -67,7 +70,11 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         this.rest = new RESTManager(this.token);
         this.messages = new MessageManager(this);
         this.chats = new ChatManager(this);
+
         this.media = new MediaManager(this);
+
+        this.groups = new GroupManager(this);
+        this.payments = new PaymentManager(this);
     }
 
     /** اطلاعات ربات پس از آماده‌شدن (یا undefined اگر هنوز login نشده باشد) */
@@ -146,8 +153,20 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
             this.emit('messageEdit', message);
         }
 
+
         if (update.callback_query) {
-            this.emit('callbackQuery', update.callback_query as CallbackQuery);
+            const callback = new CallbackQuery(this, update.callback_query);
+            this.emit('callbackQuery', callback);
         }
+
+        if (update.message?.web_app_data) {
+            this.emit('webAppData', {
+                from: update.message.from,
+                data: update.message.web_app_data.data,
+                buttonText: update.message.web_app_data.button_text,
+                message: new Message(this, update.message)
+            });
+        }
+
     }
 }

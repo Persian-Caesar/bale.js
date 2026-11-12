@@ -5,11 +5,11 @@ export interface Update {
     update_id: number;
     message?: APIMessage;
     edited_message?: APIMessage;
-    callback_query?: CallbackQuery;
+    callback_query?: APICallbackQuery;
     pre_checkout_query?: PreCheckoutQuery;
 }
 
-export interface CallbackQuery {
+export interface APICallbackQuery {
     id: string;
     from: APIUser;
     message?: APIMessage;

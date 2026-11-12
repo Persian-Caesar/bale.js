@@ -1,4 +1,4 @@
-import type { CallbackQuery } from './update';
+import { CallbackQuery } from '../structures/CallbackQuery';
 import type { APIUser } from './user';
 import type { Message } from '../structures/Message';
 
@@ -11,5 +11,11 @@ export type ClientEvents = {
     messageCreate: [message: Message];
     messageEdit: [message: Message];
     callbackQuery: [query: CallbackQuery];
+    webAppData: [data: {
+        from: APIUser | undefined,
+        data: string,
+        buttonText: string,
+        message: Message
+    }];
     error: [error: unknown];
 }
