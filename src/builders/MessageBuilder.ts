@@ -1,19 +1,34 @@
-// src/builders/MessageBuilder.ts
-export class MessageBuilder {
-    private text = '';
-    private reply_markup?: any;
+import { BaseBuilder } from './BaseBuilder';
+import type { InlineKeyboardMarkup, ReplyKeyboardMarkup } from '../types/keyboard';
 
-    setText(text: string) {
+export interface BuiltMessage {
+    text: string;
+    reply_markup?: InlineKeyboardMarkup | ReplyKeyboardMarkup;
+}
+
+export class MessageBuilder extends BaseBuilder<BuiltMessage> {
+    private text = '';
+    private replyMarkup?: InlineKeyboardMarkup | ReplyKeyboardMarkup;
+
+    /** تنظیم متن پیام */
+    setText(text: string): this {
         this.text = text;
         return this;
     }
 
-    setKeyboard(reply_markup: any) {
-        this.reply_markup = reply_markup;
+    /** پیوست کردن کیبورد (اینلاین یا ریپلای) به پیام */
+    setKeyboard(markup: InlineKeyboardMarkup | ReplyKeyboardMarkup): this {
+        this.replyMarkup = markup;
         return this;
     }
 
-    build() {
-        return { text: this.text, reply_markup: this.reply_markup };
+    build(): BuiltMessage {
+        if (!this.text) {
+            throw new Error('متن پیام نمی‌تواند خالی باشد.');
+        }
+        return {
+            text: this.text,
+            ...(this.replyMarkup ? { reply_markup: this.replyMarkup } : {}),
+        };
     }
 }

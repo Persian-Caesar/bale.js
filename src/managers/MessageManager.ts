@@ -1,36 +1,57 @@
-import { BaleClient } from '../client/BaleClient';
+import type { InlineKeyboardMarkup } from '../types/keyboard';
+import type { BaleClient } from '../client/BaleClient';
+import { BaseManager } from './BaseManager';
+import { APIMessage } from '../types';
 import { Message } from '../structures/Message';
-import { InlineKeyboardMarkup } from '../types/api';
+import { BuiltMessage } from '../builders/MessageBuilder';
 
-export class MessageManager {
-    constructor(private client: BaleClient) { }
+export interface SendMessageOptions {
+    reply_markup?: InlineKeyboardMarkup;
+    reply_to_message_id?: number;
+}
 
+/**
+ * مدیر عملیات مربوط به پیام‌ها: ارسال، ویرایش، حذف.
+ */
+export class MessageManager extends BaseManager {
+    constructor(client: BaleClient) {
+        super(client);
+    }
+
+    /**
+     * ارسال یک پیام متنی به یک چت مشخص.
+     */
     async send(
         chatId: number | string,
-        text: string,
-        options?: { reply_markup?: InlineKeyboardMarkup; reply_to_message_id?: number }
+        content: string | BuiltMessage,
+        options?: SendMessageOptions,
     ): Promise<Message> {
-        const data = await this.client.rest.sendMessage({
-            chat_id: chatId,
-            text,
-            ...options,
+        const payload =
+            typeof content === 'string'
+                ? { chat_id: chatId, text: content, ...options }
+                : { chat_id: chatId, ...content, ...options };
+
+        const data = await this.client.rest.sendMessage(payload);
+
+        return new Message(this.client, data);
+    }
+
+    /**
+     * ویرایش متن یک پیام ارسالی.
+     */
+    async edit(chatId: number, messageId: number, text: string): Promise<Message> {
+        const data = await this.client.rest.request<APIMessage>('editMessageText', {
+            body: { chat_id: chatId, message_id: messageId, text },
         });
         return new Message(this.client, data);
     }
 
-    async edit(chatId: number, messageId: number, text: string) {
-        const data = await this.client.rest.request('editMessageText', {
-            chat_id: chatId,
-            message_id: messageId,
-            text,
-        });
-        return new Message(this.client, data);
-    }
-
-    async delete(chatId: number, messageId: number) {
-        await this.client.rest.request('deleteMessage', {
-            chat_id: chatId,
-            message_id: messageId,
+    /**
+     * حذف یک پیام.
+     */
+    async delete(chatId: number, messageId: number): Promise<void> {
+        await this.client.rest.request<boolean>('deleteMessage', {
+            body: { chat_id: chatId, message_id: messageId },
         });
     }
 }
