@@ -1,10 +1,148 @@
-// src/client/BaleClient.ts (موقت — در فاز ۳ کامل می‌شود)
-import { ChatManager } from '../managers/ChatManager';
+import type {
+    Update,
+    CallbackQuery
+} from '../types/update';
 import { MessageManager } from '../managers/MessageManager';
-import type { RESTManager } from '../rest/RESTManager';
+import { PollingManager } from '../managers/PollingManager';
+import { WebhookManager } from '../managers/WebhookManager';
+import type { APIUser } from '../types/user';
+import { EventEmitter } from 'events';
+import { ChatManager } from '../managers/ChatManager';
+import { RESTManager } from '../rest/RESTManager';
+import { Message } from '../structures/Message';
 
-export interface BaleClient {
-    readonly rest: RESTManager;
-    readonly messages: MessageManager;
-    readonly chats: ChatManager;
+export type ClientMode = 'polling' | 'webhook';
+
+export interface BaleClientOptions {
+    token: string;
+    mode?: ClientMode;
+    /** گزینه‌های مخصوص Polling */
+    polling?: {
+        /** حداکثر زمان انتظار برای هر درخواست getUpdates (ثانیه). پیش‌فرض ۳۰ */
+        timeout?: number;
+        /** حداکثر تعداد آپدیت در هر درخواست. پیش‌فرض ۱۰۰ */
+        limit?: number;
+    };
+    /** گزینه‌های مخصوص Webhook */
+    webhook?: {
+        /** آدرس عمومی سرور (مثلاً https://example.com/bale/webhook) */
+        url: string;
+        /** پورت سرور HTTP محلی */
+        port?: number;
+        /** مسیر دریافت آپدیت‌ها */
+        path?: string;
+    };
+}
+
+/**
+ * رویدادهای قابل گوش‌دادن:
+ * - ready (user: APIUser)
+ * - messageCreate (message: Message)
+ * - messageEdit (message: Message)
+ * - callbackQuery (query: CallbackQuery)
+ * - error (error: unknown)
+ */
+export class BaleClient extends EventEmitter {
+    public readonly rest: RESTManager;
+    public readonly messages: MessageManager;
+    public readonly chats: ChatManager;
+
+    private readonly token: string;
+    private readonly mode: ClientMode;
+    private readonly options: BaleClientOptions;
+    private pollingManager?: PollingManager;
+    private webhookManager?: WebhookManager;
+    private readyUser?: APIUser;
+
+    constructor(options: BaleClientOptions) {
+        super();
+        this.token = options.token;
+        this.mode = options.mode ?? 'polling';
+        this.options = options;
+
+        this.rest = new RESTManager(this.token);
+        this.messages = new MessageManager(this);
+        this.chats = new ChatManager(this);
+    }
+
+    /** اطلاعات ربات پس از آماده‌شدن (یا undefined اگر هنوز login نشده باشد) */
+    get user(): APIUser | undefined {
+        return this.readyUser;
+    }
+
+    /**
+     * راه‌اندازی کلاینت.
+     * - در حالت polling: شروع حلقهٔ دریافت آپدیت.
+     * - در حالت webhook: ثبت وبهوک و راه‌اندازی سرور محلی.
+     */
+    async login(): Promise<void> {
+        this.readyUser = await this.rest.getMe();
+        this.emit('ready', this.readyUser);
+
+        if (this.mode === 'polling') {
+            await this.startPolling();
+        } else {
+            await this.startWebhook();
+        }
+    }
+
+    /** توقف دریافت آپدیت‌ها (چه polling و چه webhook) */
+    async destroy(): Promise<void> {
+        if (this.pollingManager) {
+            this.pollingManager.stop();
+            this.pollingManager = undefined;
+        }
+        if (this.webhookManager) {
+            await this.webhookManager.stop();
+            this.webhookManager = undefined;
+        }
+    }
+
+    // ─── مدیریت Polling ───────────────────────────────────────────
+
+    private async startPolling(): Promise<void> {
+        this.pollingManager = new PollingManager(this, {
+            timeout: this.options.polling?.timeout,
+            limit: this.options.polling?.limit,
+        });
+        this.pollingManager.start();
+    }
+
+    // ─── مدیریت Webhook ───────────────────────────────────────────
+
+    private async startWebhook(): Promise<void> {
+        const webhookOptions = this.options.webhook;
+        if (!webhookOptions?.url) {
+            throw new Error('در حالت webhook، گزینهٔ webhook.url الزامی است.');
+        }
+
+        this.webhookManager = new WebhookManager(this, {
+            url: webhookOptions.url,
+            port: webhookOptions.port,
+            path: webhookOptions.path,
+        });
+        await this.webhookManager.start();
+    }
+
+    // ─── توزیع آپدیت‌ها بین رویدادها ─────────────────────────────
+
+    /**
+     * این متد توسط PollingManager و WebhookManager فراخوانی می‌شود.
+     * آپدیت خام را به ساختار مناسب تبدیل کرده و رویداد مربوطه را منتشر می‌کند.
+     */
+    public dispatchUpdate(update: Update): void {
+        if (update.message) {
+            const message = new Message(this, update.message);
+            this.emit('messageCreate', message);
+        }
+
+        if (update.edited_message) {
+            const message = new Message(this, update.edited_message);
+            this.emit('messageEdit', message);
+        }
+
+        if (update.callback_query) {
+            this.emit('callbackQuery', update.callback_query as CallbackQuery);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 {
     "name": "bale.js",
     "version": "0.1.0",
-    "description": "A powerful, discord.js-like library for building Bale messenger bots.",
+    "description": "A powerful library for building Bale messenger bots.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "exports": {
@@ -32,12 +32,12 @@
         "undici": "^6.0.0"
     },
     "devDependencies": {
-        "typescript": "^5.7.0",
+        "@eslint/js": "^9.0.0",
         "@types/node": "^22.0.0",
         "eslint": "^9.0.0",
-        "@eslint/js": "^9.0.0",
-        "typescript-eslint": "^8.0.0",
-        "prettier": "^3.4.0"
+        "prettier": "^3.4.0",
+        "typescript": "^5.7.0",
+        "typescript-eslint": "^8.0.0"
     },
     "files": [
         "dist"
