@@ -104,3 +104,11 @@ export interface WebAppData {
     data: string;
     button_text: string;
 }
+
+export interface MessageEntity {
+    type: string;
+    offset: number;
+    length: number;
+    url?: string;
+    user?: APIUser;
+}

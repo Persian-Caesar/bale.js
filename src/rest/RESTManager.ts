@@ -6,6 +6,7 @@ import type { APIMessage } from '../types/message';
 import type { Update } from '../types/update';
 import type { InlineKeyboardMarkup, ReplyKeyboardMarkup } from '../types/keyboard';
 import { BaleAPIError } from './errors';
+import { BaleFile } from '../types/media';
 
 export interface RequestOptions {
     /** پارامترهای JSON (برای درخواست‌های غیر فایل) */
@@ -101,5 +102,25 @@ export class RESTManager {
 
     deleteWebhook(): Promise<boolean> {
         return this.request<boolean>('deleteWebhook');
+    }
+
+    /**
+ * دریافت اطلاعات فایل (شامل file_path برای دانلود).
+ */
+    getFile(fileId: string): Promise<BaleFile> {
+        return this.request<BaleFile>('getFile', {
+            body: { file_id: fileId },
+        });
+    }
+
+    /**
+     * دانلود فایل از سرور بله و بازگشت به صورت Buffer.
+     */
+    async downloadFile(filePath: string): Promise<Buffer> {
+        const url = `https://tapi.bale.ai/file/bot${this['token']}/${filePath}`;
+        const response = await request(url);
+        const arrayBuffer = await response.body.arrayBuffer();
+        
+        return Buffer.from(arrayBuffer);
     }
 }

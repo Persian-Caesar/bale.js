@@ -11,6 +11,7 @@ import { RESTManager } from '../rest/RESTManager';
 import { Message } from '../structures/Message';
 import { TypedEmitter } from '../structures/TypedEmitter';
 import type { ClientEvents } from '../types/events';
+import { MediaManager } from '../managers/MediaManager';
 
 export type ClientMode = 'polling' | 'webhook';
 
@@ -55,6 +56,8 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
     private webhookManager?: WebhookManager;
     private readyUser?: APIUser;
 
+    public readonly media: MediaManager;
+
     constructor(options: BaleClientOptions) {
         super();
         this.token = options.token;
@@ -64,6 +67,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         this.rest = new RESTManager(this.token);
         this.messages = new MessageManager(this);
         this.chats = new ChatManager(this);
+        this.media = new MediaManager(this);
     }
 
     /** اطلاعات ربات پس از آماده‌شدن (یا undefined اگر هنوز login نشده باشد) */

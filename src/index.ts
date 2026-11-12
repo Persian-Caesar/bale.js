@@ -18,6 +18,9 @@ export * from './builders/InlineKeyboardBuilder';
 export * from './builders/ReplyKeyboardBuilder';
 export * from './builders/MessageBuilder';
 
+export * from './types/media';
+export * from './managers/MediaManager';
+
 export * from './client/BaleClient';
 
 export * from './util/Collection';
