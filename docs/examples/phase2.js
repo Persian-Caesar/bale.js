@@ -1,4 +1,4 @@
-const { RESTManager } = require("../dist/index");
+const { RESTManager } = require("../../dist/index");
 
 require("dotenv").config();
 

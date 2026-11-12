@@ -1,4 +1,4 @@
-const { BaleClient } = require("../dist");
+const { BaleClient } = require("../../dist");
 
 require("dotenv").config();
 
