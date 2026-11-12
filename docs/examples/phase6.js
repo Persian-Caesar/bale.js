@@ -21,7 +21,7 @@ const link = await client.groups.createInviteLink(chatId, {
 
 // پرداخت
 
-import { InvoiceBuilder } from 'bale.js';
+import { InvoiceBuilder } from '@persian-caesar/bale.js';
 
 const invoice = new InvoiceBuilder()
   .setTitle('اشتراک ویژه')
@@ -53,7 +53,7 @@ client.on('callbackQuery', async (query) => {
 // مینی‌اپ
 
 // ساخت دکمهٔ مینی‌اپ
-import { InlineKeyboardBuilder } from 'bale.js';
+import { InlineKeyboardBuilder } from '@persian-caesar/bale.js';
 const keyboard = new InlineKeyboardBuilder()
   .addButton('باز کردن فروشگاه', { web_app: { url: 'https://shop.example.com' } })
   .build();

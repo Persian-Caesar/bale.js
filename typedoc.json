@@ -1,0 +1,19 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/index.ts"
+    ],
+    "out": "docs",
+    "plugin": [],
+    "excludePrivate": true,
+    "excludeInternal": true,
+    "excludeExternals": true,
+    "includeVersion": true,
+    "readme": "README.md",
+    "name": "bale.js",
+    "categorizeByGroup": true,
+    "navigationLinks": {
+        "GitHub": "https://github.com/your-username/bale.js",
+        "npm": "https://www.npmjs.com/package/bale.js"
+    }
+}

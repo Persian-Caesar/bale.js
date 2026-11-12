@@ -1,4 +1,4 @@
-const { BaleClient } = require("../../dist");
+const { BaleClient } = require("@persian-caesar/bale.js");
 
 require("dotenv").config();
 

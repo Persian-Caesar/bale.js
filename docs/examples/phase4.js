@@ -1,4 +1,4 @@
-const { BaleClient, InlineKeyboardBuilder, ReplyKeyboardBuilder, MessageBuilder } = require("../../dist");
+const { BaleClient, InlineKeyboardBuilder, ReplyKeyboardBuilder, MessageBuilder } = require("@persian-caesar/bale.js");
 
 require("dotenv").config();
 

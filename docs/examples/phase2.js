@@ -1,4 +1,4 @@
-const { RESTManager } = require("../../dist/index");
+const { RESTManager } = require("@persian-caesar/bale.js");
 
 require("dotenv").config();
 
