@@ -1,403 +1,453 @@
-# 📚 مستندات کامل و جامع bale.js
+# مستندات فارسی bale.js
 
-> کتابخانه‌ای قدرتمند، تایپ‌شده و ماژولار برای ساخت ربات‌های پیام‌رسان بله (Bale) با TypeScript
+> راهنمای استفاده از کتابخانهٔ `@persian-caesar/bale.js` برای ساخت ربات‌های پیام‌رسان بله با Node.js و TypeScript
 
-**نسخه:** 0.1.0 · **Node.js:** ≥ 18 · **لایسنس:** MIT
+**نسخهٔ سورس بررسی‌شده:** `0.1.0`  
+**حداقل نسخهٔ Node.js:** `18.0.0`  
+**مجوز:** MIT  
+**مخزن:** [Persian-Caesar/bale.js](https://github.com/Persian-Caesar/bale.js)  
+**پشتیبانی و گزارش مشکل:** [GitHub Issues](https://github.com/Persian-Caesar/bale.js/issues)
 
 ---
 
 ## فهرست مطالب
 
-1. [معرفی bale.js](#۱-معرفی-balejs)
-2. [نصب و پیش‌نیازها](#۲-نصب-و-پیشنیازها)
-3. [شروع سریع در ۵ دقیقه](#۳-شروع-سریع-در-۵-دقیقه)
-4. [کلاینت (BaleClient)](#۴-کلاینت-baleclient)
-5. [رویدادها (Events)](#۵-رویدادها-events)
-6. [ساختارها (Structures)](#۶-ساختارها-structures)
-7. [مدیریت پیام‌ها](#۷-مدیریت-پیامها)
-8. [مدیریت رسانه](#۸-مدیریت-رسانه)
-9. [مدیریت گروه](#۹-مدیریت-گروه)
-10. [پرداخت و فاکتور](#۱۰-پرداخت-و-فاکتور)
-11. [بیلدرها (Builders)](#۱۱-بیلدرها-builders)
-12. [مدیریت خطا](#۱۲-مدیریت-خطا)
-13. [ابزارهای کمکی (Collection)](#۱۳-ابزارهای-کمکی-collection)
-14. [الگوهای طراحی و بهترین شیوه‌ها](#۱۴-الگوهای-طراحی-و-بهترین-شیوهها)
-15. [عیب‌یابی](#۱۵-عیبیابی)
-16. [سوالات متداول](#۱۶-سوالات-متداول)
-17. [سهم در توسعه](#۱۷-سهم-در-توسعه)
+1. [معرفی](#1-معرفی)
+2. [قابلیت‌ها](#2-قابلیت‌ها)
+3. [پیش‌نیازها و نصب](#3-پیشنیازها-و-نصب)
+4. [ساخت ربات و دریافت توکن](#4-ساخت-ربات-و-دریافت-توکن)
+5. [اولین ربات](#5-اولین-ربات)
+6. [معماری کتابخانه](#6-معماری-کتابخانه)
+7. [BaleClient و تنظیمات](#7-baleclient-و-تنظیمات)
+8. [رویدادها (Events)](#8-رویدادها-events)
+9. [ساختارهای داده (Structures)](#9-ساختارهای-داده-structures)
+10. [مدیرها (Managers)](#10-مدیرها-managers)
+11. [کار با پیام‌ها](#11-کار-با-پیامها)
+12. [کیبوردها و دکمه‌ها](#12-کیبوردها-و-دکمهها)
+13. [ارسال و دریافت فایل و رسانه](#13-ارسال-و-دریافت-فایل-و-رسانه)
+14. [مدیریت گروه](#14-مدیریت-گروه)
+15. [پرداخت و فاکتور](#15-پرداخت-و-فاکتور)
+16. [مینی‌اپ‌ها (Web Apps)](#16-مینی‌اپها-web-apps)
+17. [RESTManager و خطاها](#17-restmanager-و-خطاها)
+18. [TypeScript و انواع داده](#18-typescript-و-انواع-داده)
+19. [Collection](#19-collection)
+20. [راه‌اندازی در محیط عملیاتی](#20-راهاندازی-در-محیط-عملیاتی)
+21. [عیب‌یابی و پرسش‌های متداول](#21-عیبیابی-و-پرسشهای-متداول)
+22. [مشارکت در توسعه](#22-مشارکت-در-توسعه)
+23. [محدودیت‌ها و نکات قابل توجه در نسخهٔ فعلی](#23-محدودیتها-و-نکات-قابل-توجه-در-نسخه-فعلی)
+24. [مجوز](#24-مجوز)
 
 ---
 
-## ۱. معرفی bale.js
+## 1. معرفی
 
-**bale.js** کتابخانه‌ای برای ساخت ربات‌های پیام‌رسان بله است که با الهام از `discord.js` و `grammY` طراحی شده. ویژگی‌های اصلی:
+`bale.js` یک کتابخانهٔ TypeScript/JavaScript برای ساخت ربات در پیام‌رسان بله است. طراحی آن از نظر تجربهٔ توسعه‌دهنده از کتابخانه‌هایی مانند `discord.js` الهام گرفته است: به‌جای فراخوانی مستقیم API در تمام بخش‌های برنامه، با یک Client، چند Manager، ساختارهای شیءگرا و Builderها کار می‌کنید.
 
-| ویژگی                        | توضیح                                               |
-| :--------------------------- | :-------------------------------------------------- |
-| 🧩 **معماری ماژولار**         | Client، REST، Structures، Managers، Builders        |
-| 🔄 **دو حالت دریافت آپدیت**   | Long Polling و Webhook — بدون تغییر کد قابل تعویض   |
-| ⌨️ **بیلدرهای روان (Fluent)** | ساخت کیبورد و پیام به صورت زنجیره‌ای                 |
-| 📎 **پشتیبانی کامل رسانه**    | عکس، سند، ویدیو، صدا، ویس — با `file_id`/URL/Buffer |
-| 👥 **مدیریت گروه**            | Ban، Promote، Pin، InviteLink و…                    |
-| 💳 **پرداخت و مینی‌اپ**        | فاکتور، PreCheckout، WebAppData                     |
-| 🛡️ **TypeScript سختگیرانه**   | تعریف کامل انواع با `strict` mode                   |
-| 🚀 **سبک و سریع**             | تنها وابستگی: `undici`                              |
+هدف اصلی کتابخانه این است که جزئیات ارتباط HTTP و تبدیل داده‌های خام API را تا حد امکان از منطق ربات جدا کند.
 
-### فلسفه طراحی
+### نمونهٔ کوتاه
 
-کتابخانه از پنج لایه تشکیل شده که هر کدام مسئولیت مشخصی دارند:
+```ts
+import { BaleClient } from '@persian-caesar/bale.js';
 
-```
-┌─────────────────────────────────────────┐
-│           BaleClient (همه‌چیز)          │  ← نقطه ورود
-├─────────────────────────────────────────┤
-│  Managers (تماس با API)                 │  ← messages, media, groups, ...
-├─────────────────────────────────────────┤
-│  Structures (پوشش داده)                 │  ← User, Chat, Message
-├─────────────────────────────────────────┤
-│  Builders (ساخت Payload)                │  ← کیبورد، فاکتور، ...
-├─────────────────────────────────────────┤
-│  RESTManager (تنها لایه شبکه)            │  ← undici
-└─────────────────────────────────────────┘
+const client = new BaleClient({
+  token: process.env.BALE_TOKEN!,
+  mode: 'polling',
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.text === '/start') {
+    await message.reply('سلام! به ربات خوش آمدید.');
+  }
+});
+
+client.login();
 ```
 
-**قانون طلایی:** فقط `RESTManager` با `tapi.bale.ai` حرف می‌زند. هیچ‌جای دیگری نباید درخواست HTTP بزند.
+## 2. قابلیت‌ها
 
----
+قابلیت‌هایی که در سورس نسخهٔ بررسی‌شده پیاده‌سازی شده‌اند:
 
-## ۲. نصب و پیش‌نیازها
+- معماری ماژولار شامل Client، REST، Structure، Manager و Builder
+- دریافت آپدیت با Long Polling یا Webhook
+- رویدادهای پیام جدید، ویرایش پیام، کلیک دکمه و دادهٔ Web App
+- ارسال، ویرایش و حذف پیام متنی
+- ساخت Inline Keyboard و Reply Keyboard
+- ارسال عکس، سند، ویدیو، صوت و پیام صوتی
+- دریافت اطلاعات فایل و دانلود آن
+- دریافت اطلاعات چت
+- عملیات مدیریتی گروه مانند مسدودسازی، ارتقای دسترسی، سنجاق پیام و ساخت لینک دعوت
+- ارسال فاکتور و پاسخ به Pre-checkout
+- ساختارهای تایپ‌شده برای بخش مهمی از داده‌های API
+- کلاس `Collection` مبتنی بر `Map`
+
+> نکته: وجود یک Type در تعریف‌ها لزوماً به معنی پشتیبانی کامل از تمام رویدادها یا متدهای API نیست. برای مثال، نوع `pre_checkout_query` در Update تعریف شده، اما در نسخهٔ فعلی Client رویدادی برای انتشار آن پیاده‌سازی نشده است. جزئیات در بخش محدودیت‌ها آمده است.
+
+## 3. پیش‌نیازها و نصب
 
 ### پیش‌نیازها
 
-- **Node.js** ≥ 18 (توصیه: Node 20 LTS)
-- **npm** ≥ 9 (یا `pnpm`/`yarn`)
-- یک **توکن ربات** از [BotFather بله](https://ble.ir/botfather)
+- Node.js نسخهٔ 18 یا بالاتر
+- npm نسخهٔ 9 یا بالاتر
+- توکن معتبر ربات بله
 
-### نصب
+### نصب پکیج
+
+نام پکیج در `package.json` این پروژه به‌صورت scoped ثبت شده است؛ بنابراین دستور نصب مطابق نام واقعی پکیج:
 
 ```bash
 npm install @persian-caesar/bale.js
 ```
 
-یا با pnpm:
+در برخی نمونه‌های قدیمی README عبارت `npm install bale.js` دیده می‌شود؛ اما برای نسخه‌ای که سورس آن بررسی شده، نام ثبت‌شده در `package.json` برابر `@persian-caesar/bale.js` است.
+
+### نصب در پروژهٔ TypeScript
 
 ```bash
-pnpm add @persian-caesar/bale.js
+npm install @persian-caesar/bale.js
+npm install --save-dev typescript @types/node
 ```
 
-### ساخت ربات
+نمونهٔ حداقلی `tsconfig.json`:
 
-1. به [@botfather](https://ble.ir/botfather) در بله پیام دهید.
-2. دستور `/newbot` را بزنید و نام و username ربات را انتخاب کنید.
-3. توکنی شبیه `123456:ABC-DEF...` دریافت می‌کنید. آن را در متغیر محیطی ذخیره کنید:
-
-```bash
-# .env
-BALE_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
 ```
 
-> ⚠️ **هرگز توکن را در Git commit نکنید.** فایل `.env` باید در `.gitignore` باشد.
+### استفاده در JavaScript
 
----
+پکیج خروجی JavaScript و فایل‌های تعریف نوع را منتشر می‌کند؛ بنابراین می‌توانید از آن در JavaScript نیز استفاده کنید:
 
-## ۳. شروع سریع در ۵ دقیقه
-
-### ربات Echo ساده
-
-```ts
-import { BaleClient } from '@persian-caesar/bale.js';
+```js
+const { BaleClient } = require('@persian-caesar/bale.js');
 
 const client = new BaleClient({
-  token: process.env.BALE_TOKEN!,
+  token: process.env.BALE_TOKEN,
   mode: 'polling',
+});
+```
+
+## 4. ساخت ربات و دریافت توکن
+
+برای ساخت ربات، از [BotFather بله](https://ble.ir/botfather) استفاده کنید و توکن صادرشده را دریافت کنید.
+
+توکن را داخل کد، مخزن Git یا فایل عمومی قرار ندهید. متغیر محیطی روش مناسب‌تری است.
+
+در ریشهٔ پروژه فایل `.env` بسازید:
+
+```env
+BALE_TOKEN=توکن_واقعی_ربات
+```
+
+برای بارگذاری `.env` می‌توانید از پکیج `dotenv` استفاده کنید:
+
+```bash
+npm install dotenv
+```
+
+در ابتدای فایل اصلی:
+
+```ts
+import 'dotenv/config';
+import { BaleClient } from '@persian-caesar/bale.js';
+
+const token = process.env.BALE_TOKEN;
+
+if (!token) {
+  throw new Error('متغیر BALE_TOKEN تنظیم نشده است.');
+}
+
+const client = new BaleClient({ token });
+```
+
+فایل `.env` در `.gitignore` پروژه قرار دارد؛ با این حال پیش از انتشار، وضعیت Git را بررسی کنید تا توکن به اشتباه commit نشده باشد.
+
+## 5. اولین ربات
+
+فایل `src/index.ts`:
+
+```ts
+import 'dotenv/config';
+import { BaleClient, InlineKeyboardBuilder } from '@persian-caesar/bale.js';
+
+const token = process.env.BALE_TOKEN;
+if (!token) throw new Error('BALE_TOKEN is missing');
+
+const client = new BaleClient({
+  token,
+  mode: 'polling',
+  polling: {
+    timeout: 30,
+    limit: 100,
+  },
 });
 
 client.on('ready', (me) => {
-  console.log(`✅ ربات @${me.username} آماده است`);
+  console.log(`ربات @${me.username ?? me.first_name} آماده است.`);
 });
 
 client.on('messageCreate', async (message) => {
-  if (!message.hasText) return;
-  await message.reply(`شما گفتید: ${message.text}`);
-});
+  try {
+    if (message.text === '/start') {
+      const keyboard = new InlineKeyboardBuilder()
+        .addButton('راهنما', { callback_data: 'help', color: 'primary' })
+        .addButton('وب‌سایت', { url: 'https://example.com' })
+        .build();
 
-client.on('error', (err) => {
-  console.error('❌ خطا:', err);
-});
-
-client.login();
-```
-
-### ربات با کیبورد شیشه‌ای
-
-```ts
-import { BaleClient, InlineKeyboardBuilder } from '@persian-caesar/bale.js';
-
-const client = new BaleClient({ token: process.env.BALE_TOKEN! });
-
-client.on('messageCreate', async (message) => {
-  if (message.text !== '/start') return;
-
-  const keyboard = new InlineKeyboardBuilder()
-    .addButton('🛍 محصولات', { callback_data: 'products' })
-    .addButton('🛒 سبد خرید', { callback_data: 'cart' })
-    .addButton('🌐 سایت', { url: 'https://example.com', color: 'primary' })
-    .adjust(2, 1)
-    .build();
-
-  await message.reply('یکی از گزینه‌ها را انتخاب کنید:', {
-    reply_markup: keyboard,
-  });
+      await message.reply('سلام! یکی از گزینه‌ها را انتخاب کنید.', {
+        reply_markup: keyboard,
+      });
+    }
+  } catch (error) {
+    console.error('خطا در پردازش پیام:', error);
+  }
 });
 
 client.on('callbackQuery', async (query) => {
-  await query.answer(`شما ${query.data} را انتخاب کردید`);
+  try {
+    await query.answer('درخواست دریافت شد.');
+    if (query.data === 'help' && query.message) {
+      await query.editMessage('برای استفاده از ربات، دستور /start را ارسال کنید.');
+    }
+  } catch (error) {
+    console.error('خطا در پردازش دکمه:', error);
+  }
 });
 
-client.login();
+client.on('error', (error) => {
+  console.error('[bale.js]', error);
+});
+
+void client.login().catch(console.error);
 ```
 
----
+**نکته:** متد `login()` یک Promise برمی‌گرداند. بهتر است خطاهای زمان راه‌اندازی آن را با `catch` مدیریت کنید.
 
-## ۴. کلاینت (BaleClient)
+## 6. معماری کتابخانه
 
-`BaleClient` قلب کتابخانه است. تمام مدیران از طریق این کلاینت قابل دسترسی هستند.
+ساختار اصلی سورس:
 
-### گزینه‌های سازنده
+```text
+src/
+├── client/
+│   └── BaleClient.ts
+├── rest/
+│   ├── RESTManager.ts
+│   └── errors.ts
+├── types/
+│   ├── api.ts
+│   ├── chat.ts
+│   ├── events.ts
+│   ├── keyboard.ts
+│   ├── media.ts
+│   ├── message.ts
+│   ├── update.ts
+│   └── user.ts
+├── structures/
+│   ├── Base.ts
+│   ├── User.ts
+│   ├── Chat.ts
+│   ├── Message.ts
+│   ├── CallbackQuery.ts
+│   └── TypedEmitter.ts
+├── managers/
+│   ├── BaseManager.ts
+│   ├── MessageManager.ts
+│   ├── ChatManager.ts
+│   ├── MediaManager.ts
+│   ├── GroupManager.ts
+│   ├── PaymentManager.ts
+│   ├── PollingManager.ts
+│   └── WebhookManager.ts
+├── builders/
+│   ├── BaseBuilder.ts
+│   ├── InlineKeyboardBuilder.ts
+│   ├── ReplyKeyboardBuilder.ts
+│   ├── MessageBuilder.ts
+│   └── InvoiceBuilder.ts
+├── util/
+│   └── Collection.ts
+└── index.ts
+```
+
+### مسئولیت هر لایه
+
+| بخش           | مسئولیت                                                   |
+| ------------- | --------------------------------------------------------- |
+| `BaleClient`  | نقطهٔ ورود، راه‌اندازی، نگهداری Managerها و انتشار رویدادها |
+| `RESTManager` | ارسال درخواست HTTP به API بله و تبدیل پاسخ/خطا            |
+| `Managers`    | اجرای عملیات حوزه‌ای مانند پیام، رسانه و گروه              |
+| `Structures`  | نمایش شیءگرای داده‌های دریافتی                             |
+| `Builders`    | ساخت payloadهای آماده بدون ارتباط شبکه                    |
+| `Types`       | تعریف ساختار داده‌ها و قراردادهای TypeScript               |
+| `Collection`  | ابزار کمکی مبتنی بر Map                                   |
+
+قاعدهٔ معماری پروژه این است که ارتباط مستقیم با API در `RESTManager` متمرکز باشد و Managerها عملیات را از طریق آن انجام دهند. Builderها نباید درخواست شبکه ارسال کنند.
+
+## 7. BaleClient و تنظیمات
+
+`BaleClient` کلاس اصلی کتابخانه است و از EventEmitter تایپ‌دار استفاده می‌کند.
+
+### سازنده
+
+```ts
+new BaleClient(options: BaleClientOptions)
+```
+
+ساختار تنظیمات:
 
 ```ts
 interface BaleClientOptions {
-  /** توکن ربات (الزامی) */
   token: string;
-
-  /** حالت دریافت آپدیت. پیش‌فرض: 'polling' */
   mode?: 'polling' | 'webhook';
-
-  /** تنظیمات Polling */
   polling?: {
-    timeout?: number;  // پیش‌فرض ۳۰ ثانیه
-    limit?: number;    // پیش‌فرض ۱۰۰
+    timeout?: number;
+    limit?: number;
   };
-
-  /** تنظیمات Webhook */
   webhook?: {
-    url: string;       // الزامی
-    port?: number;     // پیش‌فرض 3000
-    path?: string;     // پیش‌فرض '/bale/webhook'
+    url: string;
+    port?: number;
+    path?: string;
   };
 }
 ```
 
-### دسترسی‌ها
+| گزینه             | نوع                      |                 پیش‌فرض | توضیح                                 |
+| ----------------- | ------------------------ | ---------------------: | ------------------------------------- |
+| `token`           | `string`                 |                 الزامی | توکن ربات                             |
+| `mode`            | `'polling' \| 'webhook'` |              `polling` | روش دریافت آپدیت                      |
+| `polling.timeout` | `number`                 |                   `30` | زمان انتظار `getUpdates` بر حسب ثانیه |
+| `polling.limit`   | `number`                 |                  `100` | حداکثر تعداد آپدیت در هر درخواست      |
+| `webhook.url`     | `string`                 | در حالت webhook الزامی | آدرس عمومی ثبت‌شده در بله              |
+| `webhook.port`    | `number`                 |                 `3000` | پورت سرور HTTP محلی                   |
+| `webhook.path`    | `string`                 |        `/bale/webhook` | مسیر دریافت درخواست POST              |
+
+### ویژگی‌های Client
 
 ```ts
-client.rest;      // RESTManager — دسترسی خام به API
-client.messages;  // MessageManager — ارسال/ویرایش/حذف پیام
-client.chats;     // ChatManager — دریافت اطلاعات چت
-client.media;     // MediaManager — عکس، سند، ویدیو...
-client.groups;    // GroupManager — مدیریت اعضا
-client.payments;  // PaymentManager — پرداخت
-client.user;      // اطلاعات ربات (پس از login)
+client.rest       // RESTManager
+client.messages   // MessageManager
+client.chats      // ChatManager
+client.media      // MediaManager
+client.groups     // GroupManager
+client.payments   // PaymentManager
+client.user       // APIUser | undefined
 ```
 
-### متد `login()`
+`client.user` پس از دریافت موفق اطلاعات ربات در `login()` مقدار می‌گیرد؛ پیش از آن `undefined` است.
 
-کلاینت را راه‌اندازی می‌کند:
-
-1. با `getMe` اطلاعات ربات را دریافت می‌کند.
-2. رویداد `ready` را منتشر می‌کند.
-3. بسته به `mode`:
-   - **polling**: حلقه دریافت آپدیت را شروع می‌کند.
-   - **webhook**: وبهوک را ثبت و سرور HTTP را راه‌اندازی می‌کند.
+### متد login
 
 ```ts
 await client.login();
 ```
 
-### متد `destroy()`
+مراحل اجرا:
 
-کلاینت را متوقف می‌کند:
+1. با `getMe` اطلاعات ربات دریافت می‌شود.
+2. رویداد `ready` منتشر می‌شود.
+3. بر اساس `mode`، مدیر Polling یا Webhook راه‌اندازی می‌شود.
 
-- در حالت polling: حلقه را متوقف می‌کند.
-- در حالت webhook: سرور را می‌بندد و وبهوک را از Bale حذف می‌کند.
+### متد destroy
 
 ```ts
 await client.destroy();
 ```
 
-> 💡 **نکته:** اگر در حالت webhook هستید و می‌خواهید موقتاً به polling سوییچ کنید، **اول باید `deleteWebhook` را صدا بزنید** (که `destroy()` خودش این کار را می‌کند). Bale اجازه نمی‌دهد هم‌زمان webhook و polling فعال باشند.
+دریافت آپدیت را متوقف می‌کند. در حالت Polling حلقه متوقف می‌شود و در حالت Webhook سرور محلی بسته شده و وبهوک از سمت بله حذف می‌شود.
 
-### حالت Polling — کی و چطور؟
+## 8. رویدادها (Events)
 
-**مناسب برای:** توسعه، ربات‌های کوچک، سرورهای بدون IP عمومی.
+برای گوش‌دادن به رویدادها از `on` یا `once` استفاده کنید:
 
 ```ts
-const client = new BaleClient({
-  token: process.env.BALE_TOKEN!,
-  mode: 'polling',
-  polling: {
-    timeout: 30,  // Long-polling: هر درخواست تا ۳۰ ثانیه باز می‌ماند
-    limit: 100,   // حداکثر ۱۰۰ آپدیت در هر درخواست
-  },
+client.on('messageCreate', (message) => {
+  console.log(message.text);
+});
+
+client.once('ready', (user) => {
+  console.log(user);
 });
 ```
 
-**مکانیزم داخلی:**
+### فهرست رویدادهای تایپ‌شده
 
-```
-┌─────────────────────────────┐
-│ offset = 0                  │
-└──────────────┬──────────────┘
-               ▼
-     ┌──────────────────┐
-     │ getUpdates(...)  │  ← بلاک تا دریافت آپدیت یا timeout
-     └────────┬─────────┘
-              ▼
-   ┌──────────────────────┐
-   │ for each update:     │
-   │   offset = id + 1    │
-   │   dispatchUpdate()   │
-   └──────────┬───────────┘
-              ▼
-        (تکرار تا stop)
-```
+| رویداد          | آرگومان         | زمان انتشار                                |
+| --------------- | --------------- | ------------------------------------------ |
+| `ready`         | `APIUser`       | پس از دریافت موفق اطلاعات ربات             |
+| `messageCreate` | `Message`       | هنگام دریافت `update.message`              |
+| `messageEdit`   | `Message`       | هنگام دریافت `update.edited_message`       |
+| `callbackQuery` | `CallbackQuery` | هنگام دریافت `update.callback_query`       |
+| `webAppData`    | شیء دادهٔ مینی‌اپ | اگر پیام دریافتی دارای `web_app_data` باشد |
+| `error`         | `unknown`       | هنگام انتشار خطا توسط اجزای کتابخانه       |
 
-**اگر خطا رخ دهد:**
-
-| خطا                      | رفتار                             |
-| :----------------------- | :-------------------------------- |
-| `BaleAPIError` با کد 429 | به اندازه `retry_after` صبر می‌کند |
-| سایر خطاها               | ۲ ثانیه صبر می‌کند                 |
-
-**محدودیت مهم بله:** Bale تنها **۲۰۰۰ آپدیت آخر** را **برای ۲۴ ساعت** نگه می‌دارد. اگر ربات بیش از ۲۴ ساعت خاموش باشد، پیام‌ها از دست می‌روند.
-
-### حالت Webhook — کی و چطور؟
-
-**مناسب برای:** production، ربات‌های پرترافیک، سرورهای با IP عمومی.
+### نمونهٔ مدیریت پیام
 
 ```ts
-const client = new BaleClient({
-  token: process.env.BALE_TOKEN!,
-  mode: 'webhook',
-  webhook: {
-    url: 'https://yourdomain.com/bale/webhook', // آدرس عمومی
-    port: 3000,                                 // پورت محلی سرور
-    path: '/bale/webhook',                      // مسیر
-  },
-});
-```
-
-**نحوه کار:**
-
-1. کتابخانه به Bale می‌گوید «هر آپدیت را به `https://yourdomain.com/bale/webhook` بفرست».
-2. یک سرور HTTP محلی روی `port` و `path` بالا می‌آورد.
-3. هر درخواست POST را به `dispatchUpdate` می‌فرستد.
-
-**نکته پورت:** Bale فقط روی **پورت‌های محدود** (معمولاً 443، 80، 88، 8443) وبهوک می‌پذیرد. اگر پشت reverse proxy هستید (Nginx، Caddy)، سرور محلی را روی هر پورتی اجرا کنید و از بیرون روی 443 منتشر کنید.
-
-**مثال با Nginx:**
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name yourdomain.com;
-
-    location /bale/webhook {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-    }
-}
-```
-
-### متد `dispatchUpdate()` (پیشرفته)
-
-اگر خودتان یک لایه HTTP دارید (مثلاً Express)، می‌توانید از `BaleClient` بدون حالت webhook استفاده کنید:
-
-```ts
-import express from 'express';
-import { BaleClient } from '@persian-caesar/bale.js';
-
-const client = new BaleClient({ token: process.env.BALE_TOKEN! });
-const app = express();
-app.use(express.json());
-
-app.post('/bale/webhook', (req, res) => {
-  client.dispatchUpdate(req.body);
-  res.send('OK');
-});
-
-app.listen(8080);
-```
-
----
-
-## ۵. رویدادها (Events)
-
-`BaleClient` از `TypedEmitter` ارث‌بری می‌کند — همان `EventEmitter` نود اما **تایپ‌شده**.
-
-### جدول رویدادها
-
-| رویداد          | Payload                               | توضیح                          |
-| :-------------- | :------------------------------------ | :----------------------------- |
-| `ready`         | `APIUser`                             | پس از `login()` موفق           |
-| `messageCreate` | `Message`                             | پیام جدید دریافت شد            |
-| `messageEdit`   | `Message`                             | یک پیام ویرایش شد              |
-| `callbackQuery` | `CallbackQuery`                       | کاربر روی دکمه شیشه‌ای کلیک کرد |
-| `webAppData`    | `{ from, data, buttonText, message }` | داده از مینی‌اپ                 |
-| `error`         | `unknown`                             | هر خطای مدیریت‌نشده             |
-
-### الگوی توصیه‌شده برای گوش دادن
-
-```ts
-client.on('ready', (me) => {
-  console.log(`ربات @${me.username} با ID ${me.id} آماده شد`);
-});
-
 client.on('messageCreate', async (message) => {
-  try {
-    // همیشه از try/catch استفاده کنید
-    await handleMessage(message);
-  } catch (err) {
-    console.error('خطا در پردازش پیام:', err);
+  if (!message.hasText) return;
+
+  if (message.text === '/ping') {
+    await message.reply('Pong!');
   }
 });
-
-client.on('error', (err) => {
-  console.error('[bale.js]', err);
-});
 ```
 
-> ⚠️ **همیشه به `error` گوش دهید.** اگر خطایی رخ دهد و listener نداشته باشید، نود آن را روی `stderr` چاپ می‌کند و در بعضی موارد کل پروسه را می‌بندد.
-
-### الگوی Router دستی
+### نمونهٔ مدیریت ویرایش پیام
 
 ```ts
-client.on('messageCreate', async (message) => {
-  const text = message.text;
-  if (!text) return;
-
-  if (text === '/start')      return handleStart(message);
-  if (text === '/help')       return handleHelp(message);
-  if (text.startsWith('/echo ')) return handleEcho(message, text.slice(6));
-  // ...
+client.on('messageEdit', (message) => {
+  console.log('پیام ویرایش شد:', message.id, message.text);
 });
 ```
 
-### گوش دادن یک‌باره
+### نمونهٔ Callback Query
 
 ```ts
-client.once('ready', (me) => {
-  console.log(`ربات @${me.username} بالاخره آماده شد!`);
+client.on('callbackQuery', async (query) => {
+  console.log('شناسه:', query.id);
+  console.log('داده:', query.data);
+
+  await query.answer('کلیک شما ثبت شد.');
 });
 ```
 
----
+### ساختار رویداد webAppData
 
-## ۶. ساختارها (Structures)
+```ts
+client.on('webAppData', (payload) => {
+  console.log(payload.from);
+  console.log(payload.data);
+  console.log(payload.buttonText);
+  console.log(payload.message);
+});
+```
 
-ساختارها **پوشش‌های فقط‌خواندنی** روی داده خام API هستند. آن‌ها getter و متدهای کمکی دارند که به مدیران مربوطه واگذار می‌کنند.
+### مدیریت خطا
 
-### ۶.۱. `User` — کاربر یا ربات
+```ts
+client.on('error', (error) => {
+  console.error(error);
+});
+```
+
+رویداد `error` در این کتابخانه برای گزارش خطاهای Polling و Webhook استفاده می‌شود. بهتر است همیشه listener آن را ثبت کنید.
+
+## 9. ساختارهای داده (Structures)
+
+Structureها پوشش‌های شیءگرای داده‌های API هستند. بسیاری از ویژگی‌های آن‌ها فقط‌خواندنی‌اند و عملیات را به Managerها واگذار می‌کنند.
+
+### 9.1 User
 
 ```ts
 class User {
@@ -408,33 +458,40 @@ class User {
   readonly username?: string;
   readonly languageCode?: string;
 
-  /** نام کامل — "نام نام‌خانوادگی" */
   get fullName(): string;
-
-  /** @username یا نام کامل */
   toString(): string;
 }
 ```
 
-**مثال:**
+| ویژگی          | توضیح                                                              |
+| -------------- | ------------------------------------------------------------------ |
+| `id`           | شناسهٔ کاربر                                                        |
+| `isBot`        | آیا حساب ربات است؟                                                 |
+| `firstName`    | نام                                                                |
+| `lastName`     | نام خانوادگی، در صورت وجود                                         |
+| `username`     | نام کاربری، در صورت وجود                                           |
+| `languageCode` | کد زبان، در صورت وجود                                              |
+| `fullName`     | ترکیب نام و نام خانوادگی                                           |
+| `toString()`   | در صورت وجود username مقدار `@username` و در غیر این صورت نام کامل |
+
+نمونه:
 
 ```ts
 client.on('messageCreate', (message) => {
-  if (!message.from) return;
-  console.log(`${message.from.fullName} (${message.from.id}) پیام داد`);
-  // اگر username داشته باشد: @alice
-  console.log(`منشن: ${message.from}`);
+  if (message.from) {
+    console.log(message.from.id);
+    console.log(message.from.fullName);
+    console.log(message.from.toString());
+  }
 });
 ```
 
-### ۶.۲. `Chat` — چت (خصوصی، گروه، کانال)
+### 9.2 Chat
 
 ```ts
-type ChatType = 'private' | 'group' | 'channel';
-
 class Chat {
   readonly id: number;
-  readonly type: ChatType;
+  readonly type: 'private' | 'group' | 'channel';
   readonly title?: string;
   readonly username?: string;
   readonly firstName?: string;
@@ -444,26 +501,21 @@ class Chat {
   get isGroup(): boolean;
   get isChannel(): boolean;
 
-  /** ارسال پیام به این چت */
   send(text: string, options?): Promise<Message>;
 }
 ```
 
-**مثال:**
+ویژگی‌های `isPrivate`، `isGroup` و `isChannel` نوع چت را بررسی می‌کنند.
 
 ```ts
-client.on('messageCreate', async (message) => {
-  if (message.chat.isGroup) {
-    console.log(`پیام از گروه: ${message.chat.title}`);
-  }
+if (message.chat.isGroup) {
+  console.log('این پیام از گروه آمده است.');
+}
 
-  if (message.chat.isPrivate) {
-    await message.chat.send('سلام در چت خصوصی!');
-  }
-});
+await message.chat.send('پیام جدید برای همین چت');
 ```
 
-### ۶.۳. `Message` — پیام
+### 9.3 Message
 
 ```ts
 class Message {
@@ -476,53 +528,60 @@ class Message {
   readonly replyMarkup?: InlineKeyboardMarkup;
   readonly replyToMessage?: Message;
 
-  /** داده خام API — برای استفاده‌های پیشرفته */
-  get raw(): APIMessage;
+  readonly raw: APIMessage;
 
-  /** پاسخ به این پیام (به‌صورت Reply) */
   reply(text: string, options?): Promise<Message>;
-
-  /** ویرایش این پیام (فقط پیام‌های ارسالی ربات) */
   edit(text: string): Promise<Message>;
-
-  /** حذف این پیام */
   delete(): Promise<void>;
 
-  /** آیا متن دارد؟ */
   get hasText(): boolean;
-
-  /** آیا کپشن دارد؟ */
   get hasCaption(): boolean;
 }
 ```
 
-**مثال کامل:**
+| ویژگی            | توضیح                                   |
+| ---------------- | --------------------------------------- |
+| `id`             | شناسهٔ پیام (`message_id` در API)        |
+| `chat`           | چت مربوط به پیام                        |
+| `from`           | فرستنده، در صورت وجود                   |
+| `text`           | متن پیام                                |
+| `caption`        | کپشن رسانه                              |
+| `date`           | تاریخ تبدیل‌شده به شیء JavaScript `Date` |
+| `replyMarkup`    | کیبورد Inline پیام                      |
+| `replyToMessage` | پیام مرجع، در صورت وجود                 |
+| `raw`            | دادهٔ خام `APIMessage`                   |
+| `hasText`        | وجود متن غیرخالی                        |
+| `hasCaption`     | وجود کپشن غیرخالی                       |
+
+**پاسخ به پیام:**
 
 ```ts
-client.on('messageCreate', async (message) => {
-  // نوع پیام را تشخیص بده
-  if (message.hasText) {
-    await message.reply(`متن: ${message.text}`);
-  }
-
-  // reply_to_message را دنبال کن
-  if (message.replyToMessage) {
-    console.log(`در پاسخ به: ${message.replyToMessage.text}`);
-  }
-
-  // ویرایش پیام
-  if (message.text === '/edit-me') {
-    await message.edit('ویرایش شد!');
-  }
-
-  // دسترسی به فایل ضمیمه
-  if (message.raw.document) {
-    console.log(`سند: ${message.raw.document.file_name}`);
-  }
-});
+await message.reply('این یک پاسخ به پیام شماست.');
 ```
 
-### ۶.۴. `CallbackQuery` — کلیک روی دکمه شیشه‌ای
+**ویرایش پیام:**
+
+```ts
+await message.edit('متن ویرایش‌شده');
+```
+
+ویرایش در مستندات پیاده‌سازی برای پیام‌های ارسالی خود ربات در نظر گرفته شده است و API ممکن است برای پیام‌های دیگر خطا برگرداند.
+
+**حذف پیام:**
+
+```ts
+await message.delete();
+```
+
+**دسترسی به دادهٔ خام:**
+
+```ts
+console.log(message.raw);
+```
+
+تاریخ `Message.date` از timestamp ثانیه‌ای API به میلی‌ثانیه تبدیل می‌شود.
+
+### 9.4 CallbackQuery
 
 ```ts
 class CallbackQuery {
@@ -532,206 +591,574 @@ class CallbackQuery {
   readonly data?: string;
   readonly inlineMessageId?: string;
 
-  /** پاسخ به query (برای حذف حالت لودینگ) */
   answer(text?: string, showAlert?: boolean): Promise<boolean>;
-
-  /** ویرایش پیام متصل */
   editMessage(text: string): Promise<Message>;
 }
 ```
 
-**مثال:**
+| ویژگی             | توضیح                           |
+| ----------------- | ------------------------------- |
+| `id`              | شناسهٔ Callback Query            |
+| `from`            | کاربری که دکمه را فشرده است     |
+| `message`         | پیام متصل به دکمه، در صورت وجود |
+| `data`            | مقدار `callback_data`           |
+| `inlineMessageId` | شناسهٔ پیام Inline، در صورت وجود |
+
+`answer()` برای پاسخ‌دادن به Callback و پایان‌دادن به وضعیت انتظار دکمه استفاده می‌شود:
+
+```ts
+await query.answer('انجام شد');
+await query.answer('نیاز به تأیید دارد', true);
+```
+
+پارامتر دوم در صورت `true` بودن، پاسخ را به شکل هشدار نمایش می‌دهد.
+
+`editMessage()` پیام متصل را ویرایش می‌کند. اگر Callback پیام متصل نداشته باشد، Promise با خطا رد می‌شود:
+
+```ts
+if (query.message) {
+  await query.editMessage('محتوای تازه');
+}
+```
+
+## 10. مدیرها (Managers)
+
+Managerها از طریق Client در دسترس‌اند. هر Manager عملیات یک حوزه را انجام می‌دهد.
+
+### 10.1 MessageManager
+
+دسترسی:
+
+```ts
+client.messages
+```
+
+متدها:
+
+| متد      | امضا                              | خروجی              |
+| -------- | --------------------------------- | ------------------ |
+| `send`   | `send(chatId, content, options?)` | `Promise<Message>` |
+| `edit`   | `edit(chatId, messageId, text)`   | `Promise<Message>` |
+| `delete` | `delete(chatId, messageId)`       | `Promise<void>`    |
+
+ارسال پیام:
+
+```ts
+await client.messages.send(123456789, 'سلام');
+```
+
+ارسال با گزینه‌ها:
+
+```ts
+await client.messages.send(chatId, 'سلام', {
+  reply_to_message_id: messageId,
+  reply_markup: keyboard,
+});
+```
+
+پارامتر `content` می‌تواند رشته یا خروجی `MessageBuilder` باشد:
+
+```ts
+const content = new MessageBuilder()
+  .setText('به پنل خوش آمدید')
+  .setKeyboard(keyboard)
+  .build();
+
+await client.messages.send(chatId, content);
+```
+
+**توجه به نوع گزینه‌ها:** در پیاده‌سازی فعلی `SendMessageOptions.reply_markup` از نوع `InlineKeyboardMarkup` تعریف شده است؛ برای ارسال Reply Keyboard از این مسیر، ممکن است به اصلاح نوع در سورس نیاز باشد، هرچند `MessageBuilder` هر دو نوع مارک‌آپ را می‌پذیرد.
+
+### 10.2 ChatManager
+
+دسترسی:
+
+```ts
+client.chats
+```
+
+متد `fetch` اطلاعات چت را از API دریافت کرده و یک `Chat` برمی‌گرداند:
+
+```ts
+const chat = await client.chats.fetch(chatId);
+
+console.log(chat.id);
+console.log(chat.type);
+console.log(chat.title);
+```
+
+امضا:
+
+```ts
+fetch(chatId: number | string): Promise<Chat>
+```
+
+### 10.3 MediaManager
+
+دسترسی:
+
+```ts
+client.media
+```
+
+متدهای ارسال:
+
+```ts
+client.media.sendPhoto(chatId, photo, options?)
+client.media.sendDocument(chatId, document, options?)
+client.media.sendVideo(chatId, video, options?)
+client.media.sendAudio(chatId, audio, options?)
+client.media.sendVoice(chatId, voice, options?)
+```
+
+تمام متدهای ارسال، در صورت موفقیت `Promise<Message>` برمی‌گردانند.
+
+متدهای فایل:
+
+```ts
+client.media.getFileInfo(fileId) // Promise<BaleFile>
+client.media.downloadFile(fileId) // Promise<Buffer>
+```
+
+جزئیات در بخش رسانه آمده است.
+
+### 10.4 GroupManager
+
+دسترسی:
+
+```ts
+client.groups
+```
+
+متدهای مدیریتی:
+
+| متد                                                   | توضیح                         | خروجی                              |
+| ----------------------------------------------------- | ----------------------------- | ---------------------------------- |
+| `promote(chatId, userId, options)`                    | ارتقای کاربر و تنظیم دسترسی‌ها | `Promise<boolean>`                 |
+| `ban(chatId, userId)`                                 | مسدودکردن عضو                 | `Promise<boolean>`                 |
+| `unban(chatId, userId)`                               | رفع مسدودی عضو                | `Promise<boolean>`                 |
+| `pinMessage(chatId, messageId, disableNotification?)` | سنجاق پیام                    | `Promise<boolean>`                 |
+| `unpinMessage(chatId, messageId)`                     | برداشتن سنجاق پیام مشخص       | `Promise<boolean>`                 |
+| `unpinAllMessages(chatId)`                            | برداشتن سنجاق همهٔ پیام‌ها      | `Promise<boolean>`                 |
+| `createInviteLink(chatId, options?)`                  | ساخت لینک دعوت                | `Promise<{ invite_link: string }>` |
+| `getMemberCount(chatId)`                              | دریافت تعداد اعضا             | `Promise<number>`                  |
+
+### 10.5 PaymentManager
+
+دسترسی:
+
+```ts
+client.payments
+```
+
+متدها:
+
+```ts
+client.payments.sendInvoice(chatId, invoice, options?)
+client.payments.answerPreCheckout(preCheckoutQueryId, ok, errorMessage?)
+```
+
+`sendInvoice` یک `Message` و `answerPreCheckout` یک مقدار boolean برمی‌گرداند.
+
+## 11. کار با پیام‌ها
+
+### ارسال متن
+
+```ts
+await client.messages.send(chatId, 'سلام بله!');
+```
+
+### ارسال پاسخ به پیام مشخص
+
+```ts
+await client.messages.send(chatId, 'پاسخ شما', {
+  reply_to_message_id: originalMessageId,
+});
+```
+
+### ویرایش پیام
+
+```ts
+const updated = await client.messages.edit(chatId, messageId, 'متن جدید');
+```
+
+### حذف پیام
+
+```ts
+await client.messages.delete(chatId, messageId);
+```
+
+### استفاده از Chat و Message
+
+اگر یک پیام دریافت کرده‌اید، معمولاً نیازی به واردکردن دوبارهٔ شناسهٔ چت نیست:
+
+```ts
+await message.chat.send('پیام در همین چت');
+await message.reply('پاسخ به همین پیام');
+```
+
+### بررسی محتوای پیام
+
+```ts
+client.on('messageCreate', async (message) => {
+  if (message.hasText) {
+    console.log('متن:', message.text);
+  }
+
+  if (message.hasCaption) {
+    console.log('کپشن:', message.caption);
+  }
+
+  if (message.document) {
+    console.log('شناسه فایل:', message.document.file_id);
+  }
+});
+```
+
+## 12. کیبوردها و دکمه‌ها
+
+کتابخانه دو Builder برای کیبورد دارد:
+
+- `InlineKeyboardBuilder`: دکمه‌هایی که زیر پیام نمایش داده می‌شوند.
+- `ReplyKeyboardBuilder`: کیبورد سفارشی که جایگزین صفحه‌کلید ورودی می‌شود.
+
+### 12.1 InlineKeyboardBuilder
+
+ایمپورت:
+
+```ts
+import { InlineKeyboardBuilder } from '@persian-caesar/bale.js';
+```
+
+افزودن دکمه:
+
+```ts
+const keyboard = new InlineKeyboardBuilder()
+  .addButton('نمایش محصولات', { callback_data: 'products' })
+  .addButton('سبد خرید', { callback_data: 'cart' })
+  .addButton('وب‌سایت', { url: 'https://example.com' })
+  .build();
+```
+
+گزینه‌های دکمه در پیاده‌سازی:
+
+| گزینه           | نوع                                  | کاربرد                 |
+| --------------- | ------------------------------------ | ---------------------- |
+| `url`           | `string`                             | بازکردن نشانی اینترنتی |
+| `callback_data` | `string`                             | ارسال داده هنگام کلیک  |
+| `web_app`       | `{ url: string }`                    | بازکردن Web App        |
+| `color`         | `'primary' \| 'success' \| 'danger'` | رنگ دکمه               |
+
+رنگ، در صورت پشتیبانی سمت بله، یکی از مقادیر تعریف‌شده خواهد بود.
+
+#### تنظیم تعداد دکمه در هر ردیف با adjust
+
+```ts
+const keyboard = new InlineKeyboardBuilder()
+  .addButton('یک')
+  .addButton('دو')
+  .addButton('سه')
+  .addButton('چهار')
+  .adjust(2, 1)
+  .build();
+```
+
+چیدمان حاصل:
+- ردیف اول: دو دکمه
+- ردیف دوم: یک دکمه
+- ردیف سوم: دکمهٔ باقی‌مانده
+
+اگر `adjust()` فراخوانی نشود، دکمه‌هایی که با `addButton()` اضافه شده‌اند در یک ردیف قرار می‌گیرند.
+
+#### افزودن ردیف دستی
+
+```ts
+const keyboard = new InlineKeyboardBuilder()
+  .addRow(
+    { text: 'تأیید', callback_data: 'confirm' },
+    { text: 'لغو', callback_data: 'cancel' },
+  )
+  .build();
+```
+
+#### ارسال کیبورد
+
+```ts
+await message.reply('یک گزینه را انتخاب کنید:', {
+  reply_markup: keyboard,
+});
+```
+
+#### پردازش callback_data
 
 ```ts
 client.on('callbackQuery', async (query) => {
-  // ⚠️ همیشه answer را صدا بزنید!
-  await query.answer('در حال پردازش...', false);
-
   switch (query.data) {
     case 'products':
-      await query.editMessage('🛍 لیست محصولات...');
+      await query.answer('در حال نمایش محصولات');
+      if (query.message) await query.editMessage('فهرست محصولات');
       break;
 
     case 'cart':
-      await query.editMessage('🛒 سبد خرید شما خالی است');
-      break;
-
-    case 'delete':
-      // فقط برای ادمین
-      if (query.from.id === ADMIN_ID) {
-        await query.message?.delete();
-      }
+      await query.answer('سبد خرید شما');
       break;
   }
 });
 ```
 
-> ⚠️ **مهم:** اگر `answer()` را صدا نزنید، دکمه در کلاینت کاربر **در حالت لودینگ می‌ماند** و کاربر تجربه بدی خواهد داشت.
+### 12.2 ReplyKeyboardBuilder
 
----
-
-## ۷. مدیریت پیام‌ها
-
-### `MessageManager` — دسترسی: `client.messages`
+نمونه:
 
 ```ts
-interface SendMessageOptions {
-  reply_markup?: InlineKeyboardMarkup | ReplyKeyboardMarkup;
-  reply_to_message_id?: number;
-}
+import { ReplyKeyboardBuilder } from '@persian-caesar/bale.js';
+
+const keyboard = new ReplyKeyboardBuilder()
+  .addButton('ارسال مخاطب', { request_contact: true })
+  .addButton('ارسال موقعیت', { request_location: true })
+  .addButton('راهنما')
+  .adjust(2, 1)
+  .setOptions({
+    resize_keyboard: true,
+    one_time_keyboard: true,
+    selective: false,
+  })
+  .build();
 ```
 
-| متد                               | توضیح                                                          |
-| :-------------------------------- | :------------------------------------------------------------- |
-| `send(chatId, content, options?)` | ارسال پیام — `content` می‌تواند `string` یا `BuiltMessage` باشد |
-| `edit(chatId, messageId, text)`   | ویرایش متن پیام                                                |
-| `delete(chatId, messageId)`       | حذف پیام                                                       |
+گزینه‌های هر دکمه:
 
-**مثال‌ها:**
+- `request_contact`: درخواست ارسال مخاطب
+- `request_location`: درخواست ارسال موقعیت
+
+گزینه‌های خود کیبورد:
+
+| گزینه               | نوع       | کاربرد                          |
+| ------------------- | --------- | ------------------------------- |
+| `resize_keyboard`   | `boolean` | درخواست تغییر اندازهٔ کیبورد     |
+| `one_time_keyboard` | `boolean` | درخواست مخفی‌شدن پس از انتخاب    |
+| `selective`         | `boolean` | نمایش انتخابی برای کاربران مشخص |
+
+ارسال:
 
 ```ts
-// ارسال ساده
-await client.messages.send(chatId, 'سلام!');
+await client.messages.send(chatId, 'از دکمه‌ها استفاده کنید:', {
+  reply_markup: keyboard,
+} as any);
+```
 
-// ارسال با کیبورد شیشه‌ای
-const kb = new InlineKeyboardBuilder()
-  .addButton('بله', { callback_data: 'yes' })
-  .addButton('خیر', { callback_data: 'no' })
+> در نسخهٔ فعلی، نوع `SendMessageOptions.reply_markup` فقط Inline Keyboard را مشخص کرده است. استفاده از Reply Keyboard در این مسیر از نظر TypeScript به اصلاح تعریف نوع یا تبدیل نوع نیاز دارد. این محدودیت در بخش پایانی توضیح داده شده است.
+
+### 12.3 MessageBuilder
+
+برای ساخت یک پیام متنی همراه کیبورد:
+
+```ts
+import { MessageBuilder, InlineKeyboardBuilder } from '@persian-caesar/bale.js';
+
+const keyboard = new InlineKeyboardBuilder()
+  .addButton('ادامه', { callback_data: 'continue' })
   .build();
 
-await client.messages.send(chatId, 'ادامه می‌دهید؟', {
-  reply_markup: kb,
-});
-
-// ارسال به‌صورت Reply
-await client.messages.send(chatId, 'در پاسخ به پیام شما', {
-  reply_to_message_id: message.id,
-});
-
-// ویرایش
-await client.messages.edit(chatId, messageId, 'متن جدید');
-
-// حذف
-await client.messages.delete(chatId, messageId);
-```
-
-### ارسال با `MessageBuilder`
-
-```ts
-import { MessageBuilder } from '@persian-caesar/bale.js';
-
-const kb = new InlineKeyboardBuilder()
-  .addButton('تأیید', { callback_data: 'confirm', color: 'success' })
-  .addButton('لغو', { callback_data: 'cancel', color: 'danger' })
+const payload = new MessageBuilder()
+  .setText('آیا مایل به ادامه هستید؟')
+  .setKeyboard(keyboard)
   .build();
 
-const built = new MessageBuilder()
-  .setText('آیا مطمئن هستید؟')
-  .setKeyboard(kb)
-  .build();
-
-await client.messages.send(chatId, built);
+await client.messages.send(chatId, payload);
 ```
 
----
+متدها:
 
-## ۸. مدیریت رسانه
+| متد                   | توضیح                          |
+| --------------------- | ------------------------------ |
+| `setText(text)`       | تنظیم متن                      |
+| `setKeyboard(markup)` | تنظیم Inline یا Reply Keyboard |
+| `build()`             | تولید شیء `BuiltMessage`       |
 
-### `MediaManager` — دسترسی: `client.media`
+اگر متن خالی باشد، `build()` خطا پرتاب می‌کند.
 
-| متد                                     | توضیح                       |
-| :-------------------------------------- | :-------------------------- |
-| `sendPhoto(chatId, input, options?)`    | ارسال عکس                   |
-| `sendDocument(chatId, input, options?)` | ارسال سند                   |
-| `sendVideo(chatId, input, options?)`    | ارسال ویدیو                 |
-| `sendAudio(chatId, input, options?)`    | ارسال فایل صوتی             |
-| `sendVoice(chatId, input, options?)`    | ارسال ویس                   |
-| `downloadFile(fileId)`                  | دانلود فایل به‌صورت `Buffer` |
-| `getFileInfo(fileId)`                   | دریافت اطلاعات فایل         |
+## 13. ارسال و دریافت فایل و رسانه
 
-### ورودی‌های فایل (`FileInput`)
+### انواع ورودی فایل
 
-| نوع ورودی               | تشخیص     | روش انتقال            |
-| :---------------------- | :-------- | :-------------------- |
-| `"AgACAgIA..."`         | `file_id` | JSON                  |
-| `"https://..."`         | URL       | JSON                  |
-| `Buffer` / `Uint8Array` | Buffer    | `multipart/form-data` |
-
-### گزینه‌های مشترک ارسال مدیا
+نوع `FileInput` در سورس:
 
 ```ts
-interface SendMediaBaseOptions {
-  caption?: string;
-  parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML';
-  caption_entities?: MessageEntity[];
-  disable_notification?: boolean;
-  protect_content?: boolean;
-  reply_to_message_id?: number;
-  allow_sending_without_reply?: boolean;
-  reply_markup?: InlineKeyboardMarkup;
-}
+type FileInput = Buffer | string | URL;
 ```
 
-### مثال‌ها
+سه شکل ورودی قابل استفاده است:
 
-**ارسال عکس از URL:**
+1. `Buffer` برای آپلود فایل از حافظه
+2. رشته برای `file_id` یا URL
+3. شیء `URL` برای نشانی اینترنتی
+
+در پیاده‌سازی `MediaManager`:
+- `Buffer` به شکل `multipart/form-data` ارسال می‌شود.
+- رشته و `URL` به‌عنوان مقدار فیلد رسانه در بدنهٔ درخواست قرار می‌گیرند.
+
+### 13.1 ارسال عکس
 
 ```ts
-await client.media.sendPhoto(chatId, 'https://example.com/cat.jpg', {
-  caption: 'یک گربه بامزه 😺',
+await client.media.sendPhoto(chatId, 'https://example.com/photo.jpg', {
+  caption: 'تصویر نمونه',
 });
 ```
 
-**ارسال سند از دیسک:**
+آپلود از دیسک:
 
 ```ts
 import { readFile } from 'node:fs/promises';
 
-const buffer = await readFile('./report.pdf');
-await client.media.sendDocument(chatId, buffer, {
-  caption: 'گزارش سالانه',
+const photo = await readFile('./assets/photo.jpg');
+
+await client.media.sendPhoto(chatId, photo, {
+  caption: 'تصویر بارگذاری‌شده',
 });
 ```
 
-**ارسال ویدیو با `file_id` (سریع‌ترین روش):**
+### 13.2 ارسال سند
 
 ```ts
-// بار اول آپلود کنید و file_id را ذخیره کنید
-await client.media.sendVideo(chatId, 'AgACAgIAAxkBAAI...', {
-  caption: 'ویدیوی آموزشی',
-  duration: 120,
+const document = await readFile('./files/report.pdf');
+
+await client.media.sendDocument(chatId, document, {
+  caption: 'گزارش',
+});
+```
+
+### 13.3 ارسال ویدیو
+
+```ts
+const video = await readFile('./media/video.mp4');
+
+await client.media.sendVideo(chatId, video, {
+  caption: 'ویدیوی نمونه',
+  duration: 30,
+  width: 1280,
+  height: 720,
   supports_streaming: true,
 });
 ```
 
-**دانلود فایل دریافتی:**
+### 13.4 ارسال صوت
 
 ```ts
-client.on('messageCreate', async (message) => {
-  const doc = message.raw.document;
-  if (!doc) return;
-
-  const buffer = await client.media.downloadFile(doc.file_id);
-
-  const fileName = `downloads/${Date.now()}_${doc.file_name ?? 'file'}`;
-  await writeFile(fileName, buffer);
-  await message.reply(`✅ ذخیره شد: ${fileName}`);
+await client.media.sendAudio(chatId, await readFile('./media/song.mp3'), {
+  caption: 'فایل صوتی',
+  title: 'عنوان',
+  performer: 'هنرمند',
+  duration: 120,
 });
 ```
 
-**مقایسه `file_id` با Buffer:**
+### 13.5 ارسال Voice
 
-| روش       | سرعت        | اندازه درخواست   | توصیه                            |
-| :-------- | :---------- | :--------------- | :------------------------------- |
-| `file_id` | ⚡ خیلی سریع | کوچک (~100 بایت) | **توصیه‌شده** برای فایل‌های تکراری |
-| URL       | 🚀 سریع      | کوچک             | وقتی فایل روی CDN است            |
-| Buffer    | 🐢 کند       | بزرگ (کل فایل)   | فقط بار اول                      |
+```ts
+await client.media.sendVoice(chatId, await readFile('./media/voice.ogg'), {
+  duration: 8,
+});
+```
 
----
+### 13.6 گزینه‌های مشترک رسانه
 
-## ۹. مدیریت گروه
+`SendMediaBaseOptions` شامل موارد زیر است:
 
-### `GroupManager` — دسترسی: `client.groups`
+| گزینه                         | نوع                                    | توضیح                                 |
+| ----------------------------- | -------------------------------------- | ------------------------------------- |
+| `caption`                     | `string`                               | کپشن رسانه                            |
+| `parse_mode`                  | `'Markdown' \| 'MarkdownV2' \| 'HTML'` | حالت تفسیر کپشن                       |
+| `caption_entities`            | `MessageEntity[]`                      | موجودیت‌های قالب‌بندی کپشن              |
+| `disable_notification`        | `boolean`                              | ارسال بدون اعلان                      |
+| `protect_content`             | `boolean`                              | محافظت از محتوا                       |
+| `reply_to_message_id`         | `number`                               | پاسخ به پیام مشخص                     |
+| `allow_sending_without_reply` | `boolean`                              | اجازهٔ ارسال حتی در صورت حذف پیام مرجع |
+| `reply_markup`                | `InlineKeyboardMarkup`                 | کیبورد Inline                         |
+
+گزینه‌های اختصاصی:
+
+- عکس: `has_spoiler`
+- سند: `disable_content_type_detection`
+- ویدیو: `duration`، `width`، `height`، `supports_streaming`، `has_spoiler`
+- صوت: `duration`، `performer`، `title`
+- Voice: `duration`
+
+### 13.7 دریافت اطلاعات فایل
+
+```ts
+const info = await client.media.getFileInfo(fileId);
+
+console.log(info.file_id);
+console.log(info.file_unique_id);
+console.log(info.file_size);
+console.log(info.file_path);
+```
+
+نوع `BaleFile`:
+
+```ts
+interface BaleFile {
+  file_id: string;
+  file_unique_id: string;
+  file_size?: number;
+  file_path?: string;
+}
+```
+
+### 13.8 دانلود فایل
+
+```ts
+const buffer = await client.media.downloadFile(fileId);
+```
+
+ذخیره روی دیسک:
+
+```ts
+import { writeFile } from 'node:fs/promises';
+
+const buffer = await client.media.downloadFile(fileId);
+await writeFile('./downloads/file.bin', buffer);
+```
+
+اگر پاسخ `getFile` فاقد `file_path` باشد، متد `downloadFile` خطا می‌دهد.
+
+### 13.9 دریافت فایل از پیام
+
+```ts
+import { writeFile } from 'node:fs/promises';
+
+client.on('messageCreate', async (message) => {
+  if (message.document) {
+    const fileId = message.document.file_id;
+    const buffer = await client.media.downloadFile(fileId);
+
+    await writeFile('./downloads/document.bin', buffer);
+    await message.reply('فایل دریافت شد.');
+  }
+});
+```
+
+ساختارهای دادهٔ رسانه در `APIMessage` شامل `photo`، `document`، `audio`، `video`، `voice` و `sticker` هستند.
+
+## 14. مدیریت گروه
+
+تمام عملیات این بخش از `client.groups` قابل دسترسی‌اند. انجام موفق عملیات به دسترسی‌های ربات در گروه و محدودیت‌های سمت بله وابسته است.
+
+### 14.1 ارتقای کاربر به مدیر
+
+```ts
+await client.groups.promote(chatId, userId, {
+  can_change_info: true,
+  can_delete_messages: true,
+  can_invite_users: true,
+  can_restrict_members: true,
+  can_pin_messages: true,
+  can_promote_members: false,
+});
+```
+
+نوع گزینه‌ها:
 
 ```ts
 interface PromoteOptions {
@@ -742,896 +1169,648 @@ interface PromoteOptions {
   can_pin_messages?: boolean;
   can_promote_members?: boolean;
 }
+```
 
+### 14.2 مسدودکردن کاربر
+
+```ts
+const success = await client.groups.ban(chatId, userId);
+```
+
+### 14.3 رفع مسدودی
+
+```ts
+const success = await client.groups.unban(chatId, userId);
+```
+
+### 14.4 سنجاق‌کردن پیام
+
+```ts
+await client.groups.pinMessage(chatId, messageId);
+```
+
+برای غیرفعال‌کردن اعلان سنجاق:
+
+```ts
+await client.groups.pinMessage(chatId, messageId, true);
+```
+
+### 14.5 برداشتن سنجاق
+
+```ts
+await client.groups.unpinMessage(chatId, messageId);
+```
+
+برداشتن سنجاق همهٔ پیام‌ها:
+
+```ts
+await client.groups.unpinAllMessages(chatId);
+```
+
+### 14.6 ساخت لینک دعوت
+
+```ts
+const result = await client.groups.createInviteLink(chatId, {
+  member_limit: 50,
+  expire_date: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+});
+
+console.log(result.invite_link);
+```
+
+`expire_date` در نمونه به‌صورت timestamp ثانیه‌ای محاسبه شده است.
+
+نوع گزینه‌ها:
+
+```ts
 interface InviteLinkOptions {
-  expire_date?: number;   // unix timestamp
-  member_limit?: number;  // حداکثر تعداد اعضا
+  expire_date?: number;
+  member_limit?: number;
 }
 ```
 
-| متد                                                   | توضیح           |
-| :---------------------------------------------------- | :-------------- |
-| `promote(chatId, userId, options)`                    | ارتقا به ادمین  |
-| `ban(chatId, userId)`                                 | مسدود کردن      |
-| `unban(chatId, userId)`                               | رفع مسدودی      |
-| `pinMessage(chatId, messageId, disableNotification?)` | سنجاق پیام      |
-| `unpinMessage(chatId, messageId)`                     | حذف سنجاق       |
-| `unpinAllMessages(chatId)`                            | حذف همه سنجاق‌ها |
-| `createInviteLink(chatId, options?)`                  | ساخت لینک دعوت  |
-| `getMemberCount(chatId)`                              | تعداد اعضا      |
-
-### مثال‌ها
-
-**ارتقا به ادمین با دسترسی محدود:**
+### 14.7 دریافت تعداد اعضا
 
 ```ts
-await client.groups.promote(chatId, userId, {
-  can_delete_messages: true,
-  can_invite_users: true,
-  can_pin_messages: false,  // نمی‌تواند سنجاق کند
-});
+const count = await client.groups.getMemberCount(chatId);
+console.log('تعداد اعضا:', count);
 ```
 
-**لیست سیاه (Blacklist):**
+## 15. پرداخت و فاکتور
+
+کتابخانه `InvoiceBuilder` برای ساخت payload فاکتور و `PaymentManager` برای ارسال فاکتور و پاسخ به Pre-checkout دارد.
+
+### 15.1 ساخت فاکتور
 
 ```ts
-client.on('messageCreate', async (message) => {
-  if (!message.chat.isGroup) return;
+import { InvoiceBuilder } from '@persian-caesar/bale.js';
 
-  const BANNED = [12345, 67890];
-  if (message.from && BANNED.includes(message.from.id)) {
-    await client.groups.ban(message.chat.id, message.from.id);
-    await message.delete();
-    await message.chat.send(`⛔ ${message.from.fullName} مسدود شد`);
-  }
-});
-```
-
-**ساخت لینک دعوت یک‌بارمصرف (۲۴ ساعته، ۵۰ نفر):**
-
-```ts
-const { invite_link } = await client.groups.createInviteLink(chatId, {
-  member_limit: 50,
-  expire_date: Math.floor(Date.now() / 1000) + 86400,
-});
-
-await client.messages.send(chatId, `لینک دعوت: ${invite_link}`);
-```
-
----
-
-## ۱۰. پرداخت و فاکتور
-
-### `PaymentManager` — دسترسی: `client.payments`
-
-### `InvoiceBuilder` — ساخت فاکتور
-
-```ts
 const invoice = new InvoiceBuilder()
   .setTitle('اشتراک ویژه')
-  .setDescription('دسترسی یک‌ماهه به امکانات ویژه')
-  .setPayload('sub_1month')                  // شناسه داخلی سفارش
+  .setDescription('اشتراک یک‌ماهه')
+  .setPayload('premium_monthly_001')
   .setProviderToken(process.env.PROVIDER_TOKEN!)
   .setCurrency('IRR')
   .addPrice('اشتراک یک‌ماهه', 50000)
-  .addPrice('مالیات', 4500)
-  .requireName()                             // نام کاربر را بگیر
-  .requireEmail()                            // ایمیل کاربر را بگیر
+  .requireName()
+  .requirePhone()
+  .requireEmail()
   .build();
-
-await client.payments.sendInvoice(chatId, invoice);
 ```
 
-### پاسخ به `PreCheckoutQuery`
+### متدهای InvoiceBuilder
 
-Bale قبل از کسر وجه، یک `pre_checkout_query` می‌فرستد. باید تأیید یا رد کنید:
+| متد                           | کاربرد                           |
+| ----------------------------- | -------------------------------- |
+| `setTitle(title)`             | عنوان فاکتور                     |
+| `setDescription(description)` | توضیحات                          |
+| `setPayload(payload)`         | شناسهٔ داخلی سفارش                |
+| `setProviderToken(token)`     | توکن ارائه‌دهندهٔ پرداخت           |
+| `setCurrency(currency)`       | واحد پول                         |
+| `addPrice(label, amount)`     | افزودن ردیف قیمت                 |
+| `setPhotoUrl(url)`            | تصویر فاکتور                     |
+| `requireName()`               | درخواست نام                      |
+| `requirePhone()`              | درخواست شماره تلفن               |
+| `requireEmail()`              | درخواست ایمیل                    |
+| `build()`                     | اعتبارسنجی حداقلی و ساخت payload |
+
+`build()` در این نسخه بررسی می‌کند که عنوان، توضیحات، payload و دست‌کم یک ردیف قیمت وجود داشته باشند. این متد وجود `provider_token` و `currency` را در سطح کد اعتبارسنجی نمی‌کند؛ با این حال برای ارسال واقعی باید مقادیر معتبر فراهم کنید.
+
+### 15.2 ارسال فاکتور
 
 ```ts
+const sentInvoice = await client.payments.sendInvoice(chatId, invoice);
+```
+
+### 15.3 پاسخ به Pre-checkout
+
+```ts
+await client.payments.answerPreCheckout(queryId, true);
+```
+
+برای رد:
+
+```ts
+await client.payments.answerPreCheckout(
+  queryId,
+  false,
+  'اطلاعات سفارش معتبر نیست.',
+);
+```
+
+**محدودیت مهم نسخهٔ فعلی:** نوع `PreCheckoutQuery` در `types/update.ts` تعریف شده و `answerPreCheckout()` نیز وجود دارد؛ اما `BaleClient.dispatchUpdate()` آن را به رویداد منتشر نمی‌کند و `ClientEvents` نیز رویداد `preCheckoutQuery` ندارد. بنابراین نمونهٔ listener زیر با پیاده‌سازی فعلی قابل اتکا نیست، مگر اینکه این قابلیت در سورس تکمیل شود:
+
+```ts
+// این نمونه نیازمند پیاده‌سازی انتشار preCheckoutQuery در کتابخانه است.
 client.on('preCheckoutQuery', async (query) => {
-  // اعتبارسنجی سفارش
-  const payload = query.invoice_payload;
-  const amount = query.total_amount;
-
-  if (payload === 'sub_1month' && amount === 50000) {
-    await client.payments.answerPreCheckout(query.id, true);
-  } else {
-    await client.payments.answerPreCheckout(
-      query.id,
-      false,
-      'مبلغ با انتظار مطابقت ندارد',
-    );
-  }
+  await client.payments.answerPreCheckout(query.id, true);
 });
 ```
 
-> ⚠️ **مهم:** اگر `answerPreCheckout` را صدا نزنید، پرداخت در حالت معلق می‌ماند و کاربر تجربه بدی خواهد داشت.
+برای فعال‌سازی کامل، باید در `dispatchUpdate`، `update.pre_checkout_query` بررسی و رویداد متناظر تعریف و منتشر شود.
 
-### پرداخت موفق
+## 16. مینی‌اپ‌ها (Web Apps)
 
-```ts
-client.on('messageCreate', async (message) => {
-  const payment = message.raw.successful_payment;
-  if (!payment) return;
-
-  await message.reply(`✅ پرداخت ${payment.total_amount} ${payment.currency} موفق بود!`);
-  // دسترسی را فعال کن...
-});
-```
-
----
-
-## ۱۱. بیلدرها (Builders)
-
-بیلدرها **توابع خالص** برای ساخت payload هستند. شبکه را لمس نمی‌کنند و همیشه یک شیء ساده برمی‌گردانند.
-
-### `InlineKeyboardBuilder` — کیبورد شیشه‌ای
+برای بازکردن مینی‌اپ از دکمهٔ Inline با ویژگی `web_app` استفاده کنید:
 
 ```ts
-interface InlineButtonOptions {
-  url?: string;
-  callback_data?: string;
-  web_app?: { url: string };
-  color?: 'primary' | 'success' | 'danger';
-}
+import { InlineKeyboardBuilder } from '@persian-caesar/bale.js';
 
-class InlineKeyboardBuilder {
-  addButton(text: string, options?: InlineButtonOptions): this;
-  addRow(...buttons: InlineKeyboardButton[]): this;
-  adjust(...sizes: number[]): this;
-  build(): InlineKeyboardMarkup;
-}
-```
-
-**مثال‌ها:**
-
-```ts
-// ساده
-const kb = new InlineKeyboardBuilder()
-  .addButton('بله', { callback_data: 'yes' })
-  .addButton('خیر', { callback_data: 'no' })
-  .build();
-// نتیجه: یک ردیف با دو دکمه
-
-// چیدمان چندردیفی
-const kb = new InlineKeyboardBuilder()
-  .addButton('A')
-  .addButton('B')
-  .addButton('C')
-  .adjust(2, 1)
-  .build();
-// نتیجه: [A, B] / [C]
-
-// ردیف دستی
-const kb = new InlineKeyboardBuilder()
-  .addRow({ text: 'ردیف ۱', callback_data: 'r1' }, { text: 'ردیف ۱', url: 'https://...' })
-  .addRow({ text: 'ردیف ۲', callback_data: 'r2' })
-  .build();
-```
-
-**⚠️ نکته مهم:** یک دکمه **نمی‌تواند هم‌زمان `url` و `callback_data` داشته باشد**. Bale خطا می‌دهد.
-
-### `ReplyKeyboardBuilder` — کیبورد سفارشی
-
-```ts
-interface ReplyButtonOptions {
-  request_contact?: boolean;
-  request_location?: boolean;
-}
-
-interface ReplyKeyboardOptions {
-  resize_keyboard?: boolean;
-  one_time_keyboard?: boolean;
-  selective?: boolean;
-}
-
-class ReplyKeyboardBuilder {
-  addButton(text: string, options?: ReplyButtonOptions): this;
-  addRow(...buttons: KeyboardButton[]): this;
-  adjust(...sizes: number[]): this;
-  setOptions(options: ReplyKeyboardOptions): this;
-  build(): ReplyKeyboardMarkup;
-}
-```
-
-**مثال:**
-
-```ts
-const menu = new ReplyKeyboardBuilder()
-  .addButton('📱 ارسال شماره', { request_contact: true })
-  .addButton('📍 ارسال موقعیت', { request_location: true })
-  .addButton('📄 شرایط و قوانین')
-  .addButton('❓ راهنما')
-  .adjust(1, 1, 2)
-  .setOptions({
-    resize_keyboard: true,       // اندازه کوچک‌تر
-    one_time_keyboard: true,     // بعد از یک بار، مخفی شود
+const keyboard = new InlineKeyboardBuilder()
+  .addButton('باز کردن فروشگاه', {
+    web_app: {
+      url: 'https://shop.example.com',
+    },
   })
   .build();
 
-await client.messages.send(chatId, 'انتخاب کنید:', {
-  reply_markup: menu,
+await message.reply('برای ورود به فروشگاه کلیک کنید:', {
+  reply_markup: keyboard,
 });
 ```
 
-### `MessageBuilder`
-
-```ts
-const built = new MessageBuilder()
-  .setText('سلام!')
-  .setKeyboard(kb)
-  .build();
-// نتیجه: { text: 'سلام!', reply_markup: kb }
-
-await client.messages.send(chatId, built);
-```
-
-**محدودیت:** اگر `text` خالی باشد، `build()` خطا می‌دهد.
-
-### `InvoiceBuilder` — جدول کامل
-
-| متد                |    الزامی؟    | توضیح        |
-| :----------------- | :-----------: | :----------- |
-| `setTitle`         |       ✅       | عنوان        |
-| `setDescription`   |       ✅       | توضیحات      |
-| `setPayload`       |       ✅       | شناسه داخلی  |
-| `setProviderToken` |       ✅       | توکن درگاه   |
-| `setCurrency`      |       ✅       | ارز (IRR)    |
-| `addPrice`         | ✅ (حداقل یکی) | آیتم قیمت    |
-| `setPhotoUrl`      |       ❌       | عکس محصول    |
-| `requireName`      |       ❌       | نام خریدار   |
-| `requirePhone`     |       ❌       | تلفن خریدار  |
-| `requireEmail`     |       ❌       | ایمیل خریدار |
-
-`build()` اگر فیلدهای الزامی خالی باشند، خطا می‌دهد.
-
-### `web_app` — دکمه مینی‌اپ
-
-```ts
-const kb = new InlineKeyboardBuilder()
-  .addButton('🛍 باز کردن فروشگاه', {
-    web_app: { url: 'https://shop.example.com' },
-  })
-  .build();
-```
-
-وقتی کاربر دکمه را می‌زند، مینی‌اپ باز می‌شود. داده‌ای که مینی‌اپ برمی‌گرداند، در رویداد `webAppData` دریافت می‌شود:
+هنگامی که دادهٔ Web App در پیام ورودی وجود داشته باشد، Client رویداد `webAppData` را منتشر می‌کند:
 
 ```ts
 client.on('webAppData', (payload) => {
+  console.log('فرستنده:', payload.from);
   console.log('داده:', payload.data);
   console.log('متن دکمه:', payload.buttonText);
-  console.log('کاربر:', payload.message.from?.fullName);
+  console.log('پیام:', payload.message);
 });
 ```
 
-> 💡 **نکته:** دکمه‌های `web_app` فقط در **چت خصوصی** با ربات کار می‌کنند (محدودیت Bale).
+ساختار payload:
 
----
+```ts
+{
+  from: APIUser | undefined;
+  data: string;
+  buttonText: string;
+  message: Message;
+}
+```
 
-## ۱۲. مدیریت خطا
+دادهٔ دریافتی از سمت کاربر را ورودی قابل اعتماد فرض نکنید؛ در سمت سرور اعتبارسنجی کنید.
 
-همه خطاهای API به‌صورت `BaleAPIError` پرتاب می‌شوند:
+## 17. RESTManager و خطاها
+
+### 17.1 RESTManager
+
+`RESTManager` لایهٔ ارتباط HTTP با API بله است. در Client از طریق `client.rest` قابل دسترسی است.
+
+آدرس پایه در پیاده‌سازی:
+
+```text
+https://tapi.bale.ai/bot<TOKEN>
+```
+
+هر متد API با درخواست POST فراخوانی می‌شود.
+
+### متد عمومی request
+
+```ts
+request<T>(method: string, options?: RequestOptions): Promise<T>
+```
+
+نوع گزینه‌ها:
+
+```ts
+interface RequestOptions {
+  body?: Record<string, unknown>;
+  files?: Record<
+    string,
+    {
+      data: Buffer | Uint8Array;
+      filename: string;
+      contentType?: string;
+    }
+  >;
+}
+```
+
+- اگر `files` وجود داشته باشد، بدنه از نوع `FormData` ساخته می‌شود.
+- در غیر این صورت بدنه به JSON تبدیل می‌شود.
+- در صورت `ok: false` در پاسخ API، خطای `BaleAPIError` پرتاب می‌شود.
+- در صورت موفقیت، مقدار `result` بازگردانده می‌شود.
+
+### میان‌برهای RESTManager
+
+| متد                      | کاربرد                   |
+| ------------------------ | ------------------------ |
+| `getMe()`                | دریافت اطلاعات ربات      |
+| `sendMessage(params)`    | ارسال پیام               |
+| `getUpdates(params?)`    | دریافت آپدیت‌ها           |
+| `setWebhook(url)`        | ثبت وبهوک                |
+| `deleteWebhook()`        | حذف وبهوک                |
+| `getFile(fileId)`        | دریافت اطلاعات فایل      |
+| `downloadFile(filePath)` | دانلود فایل با مسیر فایل |
+
+نمونهٔ استفادهٔ مستقیم:
+
+```ts
+const me = await client.rest.getMe();
+console.log(me.username);
+```
+
+در برنامه‌های معمول بهتر است از متدهای سطح بالاتر مانند `client.messages.send()` یا `client.media.sendPhoto()` استفاده کنید تا تبدیل Structureها و قراردادهای کتابخانه حفظ شود.
+
+### 17.2 BaleAPIError
+
+کلاس خطای API:
+
+```ts
+class BaleAPIError extends Error {
+  readonly code: number;
+  readonly parameters?: ResponseParameters;
+}
+```
+
+پارامترهای تکمیلی:
+
+```ts
+interface ResponseParameters {
+  migrate_to_chat_id?: number;
+  retry_after?: number;
+}
+```
+
+مدیریت خطا:
 
 ```ts
 import { BaleAPIError } from '@persian-caesar/bale.js';
 
 try {
   await client.messages.send(chatId, 'سلام');
-} catch (err) {
-  if (err instanceof BaleAPIError) {
-    console.error(`خطای API [${err.code}]: ${err.message}`);
-
-    if (err.code === 429) {
-      const retryAfter = err.parameters?.retry_after ?? 1;
-      await delay(retryAfter * 1000);
-      // دوباره تلاش کن...
-    }
-
-    if (err.code === 403) {
-      // ربات از چت مسدود شده
-    }
+} catch (error) {
+  if (error instanceof BaleAPIError) {
+    console.error('کد خطا:', error.code);
+    console.error('پیام:', error.message);
+    console.error('پارامترها:', error.parameters);
   } else {
-    // خطای شبکه، پارس JSON، ...
-    console.error('خطای غیرمنتظره:', err);
+    console.error('خطای غیر API:', error);
   }
 }
 ```
 
-### جدول کدهای رایج Bale
+### مدیریت محدودیت نرخ درخواست (429)
 
-| کد   | معنا          | راه‌حل                           |
-| :--- | :------------ | :------------------------------ |
-| 400  | درخواست بد    | پارامترها را بررسی کن           |
-| 401  | توکن نامعتبر  | توکن را چک کن                   |
-| 403  | دسترسی ندارید | ربات ادمین نیست یا مسدود شده    |
-| 404  | پیدا نشد      | `chat_id`/`message_id` را چک کن |
-| 429  | زیاد از حد    | `retry_after` را رعایت کن       |
+`PollingManager` در صورت دریافت `BaleAPIError` با کد `429`، مقدار `retry_after` را می‌خواند و به همان تعداد ثانیه صبر می‌کند. اگر این مقدار در پاسخ نباشد، یک ثانیه تأخیر می‌دهد.
 
-### الگوی Retry (تلاش مجدد)
+برای سایر خطاهای Polling، دو ثانیه تأخیر اعمال می‌شود و رویداد `error` منتشر خواهد شد.
+
+## 18. TypeScript و انواع داده
+
+انواع عمومی از مسیر اصلی پکیج export شده‌اند. نمونه:
 
 ```ts
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxAttempts = 3,
-): Promise<T> {
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (err instanceof BaleAPIError && err.code === 429) {
-        const wait = (err.parameters?.retry_after ?? 1) * 1000;
-        await delay(wait);
-        continue;
-      }
-      if (i === maxAttempts - 1) throw err;
-      await delay(1000 * 2 ** i); // exponential backoff
-    }
-  }
-  throw new Error('unreachable');
+import type {
+  APIResponse,
+  APIUser,
+  APIChat,
+  APIMessage,
+  Update,
+  APICallbackQuery,
+  PreCheckoutQuery,
+  InlineKeyboardMarkup,
+  InlineKeyboardButton,
+  ReplyKeyboardMarkup,
+  KeyboardButton,
+  MessageEntity,
+} from '@persian-caesar/bale.js';
+```
+
+### خانوادهٔ Typeها
+
+| فایل          | انواع مهم                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `api.ts`      | `APIResponse`، `ResponseParameters`                                                                                                                    |
+| `user.ts`     | `APIUser`                                                                                                                                              |
+| `chat.ts`     | `APIChat`، `ChatType`                                                                                                                                  |
+| `message.ts`  | `APIMessage`، `PhotoSize`، `Document`، `Audio`، `Video`، `Voice`، `Sticker`، `Contact`، `Location`، `SuccessfulPayment`، `WebAppData`، `MessageEntity` |
+| `update.ts`   | `Update`، `APICallbackQuery`، `PreCheckoutQuery`، `OrderInfo`                                                                                          |
+| `keyboard.ts` | `ButtonColor`، `InlineKeyboardButton`، `InlineKeyboardMarkup`، `KeyboardButton`، `ReplyKeyboardMarkup`، `ReplyKeyboardRemove`                          |
+| `media.ts`    | `FileInput`، `ResolvedFileInput`، `BaleFile`، گزینه‌های ارسال رسانه                                                                                     |
+
+### APIUser در برابر User
+
+این دو را با هم اشتباه نگیرید:
+
+- `APIUser` شکل خام دادهٔ دریافتی از API است و نام فیلدها را به شکل snake_case نگه می‌دارد.
+- `User` یک Structure است که ویژگی‌های camelCase مانند `firstName` و `isBot` دارد.
+
+برای نمونه، رویداد `ready` در تعریف فعلی `APIUser` برمی‌گرداند، اما `message.from` از نوع Structure یعنی `User` است.
+
+### APIMessage
+
+`APIMessage` دادهٔ خام پیام را نمایش می‌دهد و شامل شناسه، چت، تاریخ، متن، کپشن، فرستنده، پیام مرجع و فیلدهای رسانه‌ای است.
+
+### Update
+
+```ts
+interface Update {
+  update_id: number;
+  message?: APIMessage;
+  edited_message?: APIMessage;
+  callback_query?: APICallbackQuery;
+  pre_checkout_query?: PreCheckoutQuery;
 }
-
-// استفاده
-await withRetry(() => client.messages.send(chatId, 'سلام'));
 ```
 
-### `Collection` برای مدیریت کش
+وجود فیلد در این Interface به‌تنهایی تضمین نمی‌کند که Client برای آن رویداد منتشر می‌کند.
+
+## 19. Collection
+
+`Collection<K, V>` یک کلاس توسعه‌یافته از `Map<K, V>` است.
 
 ```ts
 import { Collection } from '@persian-caesar/bale.js';
 
-const userCache = new Collection<number, User>();
+const users = new Collection<number, string>();
 
-client.on('messageCreate', (message) => {
-  if (!message.from) return;
-  if (!userCache.has(message.from.id)) {
-    userCache.set(message.from.id, message.from);
-    console.log(`کاربر جدید! مجموع: ${userCache.size}`);
-  }
-});
+users.set(1, 'Ali');
+users.set(2, 'Sara');
+
+console.log(users.first());
+console.log(users.last());
 ```
 
----
+### متدها
 
-## ۱۳. ابزارهای کمکی (Collection)
+| متد            | خروجی              | توضیح                    |
+| -------------- | ------------------ | ------------------------ |
+| `toArray()`    | `V[]`              | تبدیل مقادیر به آرایه    |
+| `toKeyArray()` | `K[]`              | تبدیل کلیدها به آرایه    |
+| `first()`      | `V \| undefined`   | اولین مقدار              |
+| `last()`       | `V \| undefined`   | آخرین مقدار              |
+| `filter(fn)`   | `Collection<K, V>` | ساخت Collection فیلترشده |
+| `map(fn)`      | `T[]`              | نگاشت مقادیر به آرایه    |
 
-`Collection` یک `Map` توسعه‌یافته است، مشابه `discord.js`:
+مثال فیلتر:
 
 ```ts
-import { Collection } from '@persian-caesar/bale.js';
-
-const col = new Collection<string, number>([
-  ['a', 1],
-  ['b', 2],
-  ['c', 3],
+const scores = new Collection<string, number>([
+  ['ali', 18],
+  ['sara', 9],
+  ['reza', 15],
 ]);
 
-col.first();       // 1
-col.last();        // 3
-col.toArray();     // [1, 2, 3]
-col.toKeyArray();  // ['a', 'b', 'c']
-col.filter((v) => v > 1);  // Collection { b: 2, c: 3 }
-col.map((v) => v * 2);     // [2, 4, 6]
+const passed = scores.filter((score) => score >= 10);
+
+console.log(passed.toArray()); // [18, 15]
 ```
 
-### موارد استفاده
+مثال map:
 
 ```ts
-// کش کاربران
-const users = new Collection<number, User>();
+const names = users.map((value, key) => `${key}: ${value}`);
+```
 
-// کش مکالمات
-interface ConversationState {
-  step: 'name' | 'email' | 'done';
-  data: { name?: string; email?: string };
-}
-const conversations = new Collection<number, ConversationState>();
+تمام متدهای استاندارد `Map` نیز در دسترس‌اند؛ از جمله `get`، `set`، `has`، `delete`، `clear`، `keys`، `values` و `entries`.
 
-client.on('messageCreate', async (message) => {
-  if (!message.from || !message.text) return;
-  const userId = message.from.id;
+## 20. راه‌اندازی در محیط عملیاتی
 
-  if (message.text === '/start') {
-    conversations.set(userId, { step: 'name', data: {} });
-    await message.reply('اسمت چیه؟');
-    return;
-  }
+### 20.1 انتخاب Polling یا Webhook
 
-  const conv = conversations.get(userId);
-  if (!conv) return;
+#### Polling
 
-  switch (conv.step) {
-    case 'name':
-      conv.data.name = message.text;
-      conv.step = 'email';
-      await message.reply('ایمیلت چیه؟');
-      break;
+در Polling، کتابخانه به‌صورت پیوسته `getUpdates` را فراخوانی می‌کند.
 
-    case 'email':
-      conv.data.email = message.text;
-      conv.step = 'done';
-      await message.reply(`ممنون ${conv.data.name}!`);
-      conversations.delete(userId);
-      break;
-  }
+```ts
+const client = new BaleClient({
+  token,
+  mode: 'polling',
+  polling: {
+    timeout: 30,
+    limit: 100,
+  },
 });
 ```
 
----
+مزایا:
+- برای شروع ساده است.
+- به endpoint ورودی عمومی برای دریافت آپدیت نیاز ندارد.
+- برای توسعهٔ محلی مناسب است.
 
-## ۱۴. الگوهای طراحی و بهترین شیوه‌ها
+ملاحظات:
+- پردازش آپدیت‌ها وابسته به روشن‌بودن فرایند ربات است.
+- مقدار `offset` در حافظهٔ PollingManager نگهداری می‌شود؛ در صورت راه‌اندازی مجدد فرایند، مقدار آن از صفر آغاز خواهد شد.
+- اطلاعات نگهداری آپدیت‌ها و محدودیت‌های سمت بله را در طراحی سیستم در نظر بگیرید.
 
-### ۱۴.۱. سازماندهی کد — الگوی Router
+#### Webhook
 
-پروژه را به فایل‌های کوچک تقسیم کنید:
-
-```
-src/
-├── index.ts
-├── client.ts
-├── handlers/
-│   ├── start.ts
-│   ├── echo.ts
-│   └── admin.ts
-└── utils/
-    └── logger.ts
-```
+در Webhook، بله به آدرس عمومی شما درخواست POST می‌فرستد و `WebhookManager` یک HTTP server محلی ایجاد می‌کند.
 
 ```ts
-// handlers/start.ts
-import type { Message } from '@persian-caesar/bale.js';
-import { InlineKeyboardBuilder } from '@persian-caesar/bale.js';
-
-export async function handleStart(message: Message) {
-  const kb = new InlineKeyboardBuilder()
-    .addButton('🛍 محصولات', { callback_data: 'products' })
-    .build();
-
-  await message.reply('به ربات خوش آمدید! 👋', { reply_markup: kb });
-}
-```
-
-```ts
-// client.ts
-import { handleStart } from './handlers/start.js';
-import { handleEcho } from './handlers/echo.js';
-
-client.on('messageCreate', async (message) => {
-  switch (message.text) {
-    case '/start': return handleStart(message);
-    case '/echo':  return handleEcho(message);
-    // ...
-  }
+const client = new BaleClient({
+  token,
+  mode: 'webhook',
+  webhook: {
+    url: 'https://example.com/bale/webhook',
+    port: 3000,
+    path: '/bale/webhook',
+  },
 });
+
+await client.login();
 ```
 
-### ۱۴.۲. حالت‌های مکالمه (Conversation State)
+نکات:
+- `url` آدرس عمومی ثبت‌شده در بله است.
+- `port` پورتی است که سرور محلی Node روی آن گوش می‌دهد.
+- `path` مسیر محلی دریافت درخواست است.
+- سرور فقط درخواست POST روی مسیر تنظیم‌شده را می‌پذیرد.
+- درخواست‌های نامعتبر از نظر مسیر یا متد، پاسخ 404 می‌گیرند.
+- اگر JSON قابل parse نباشد، رویداد `error` منتشر و پاسخ 400 ارسال می‌شود.
+
+اگر از Reverse Proxy مانند Nginx یا Caddy استفاده می‌کنید، باید مسیر عمومی را به پورت محلی برنامه هدایت کنید و الزامات پورت مورد قبول بله را رعایت کنید.
+
+### 20.2 توقف صحیح
 
 ```ts
-type Step = 'idle' | 'awaiting_name' | 'awaiting_phone';
-const states = new Collection<number, Step>();
-
-client.on('messageCreate', async (message) => {
-  const state = states.get(message.from!.id) ?? 'idle';
-
-  if (state === 'awaiting_name') {
-    await message.reply(`سلام ${message.text}!`);
-    states.set(message.from!.id, 'awaiting_phone');
-    return;
-  }
-
-  if (state === 'awaiting_phone') {
-    // ...
-  }
-});
+await client.destroy();
 ```
 
-### ۱۴.۳. لاگ و دیباگ
+این متد را هنگام خاموش‌کردن برنامه فراخوانی کنید. در برنامه‌های Node می‌توانید سیگنال‌های سیستم‌عامل را مدیریت کنید:
 
 ```ts
-const DEBUG = process.env.DEBUG === 'true';
-
-function log(...args: unknown[]) {
-  if (DEBUG) console.log('[debug]', ...args);
-}
-
-client.on('messageCreate', (message) => {
-  log('پیام جدید:', message.id, message.text);
-});
-```
-
-### ۱۴.۴. جداسازی توکن و تنظیمات
-
-```ts
-// config.ts
-export const config = {
-  token: process.env.BALE_TOKEN!,
-  adminId: Number(process.env.ADMIN_ID),
-  mode: (process.env.MODE ?? 'polling') as 'polling' | 'webhook',
+const shutdown = async () => {
+  await client.destroy();
+  process.exit(0);
 };
 
-if (!config.token) {
-  throw new Error('BALE_TOKEN تنظیم نشده!');
-}
+process.once('SIGINT', () => void shutdown());
+process.once('SIGTERM', () => void shutdown());
 ```
 
-### ۱۴.۵. دسته‌بندی خطاها
+### 20.3 اجرای build
 
-```ts
-function isUserError(err: unknown): boolean {
-  return err instanceof BaleAPIError && [400, 403, 404].includes(err.code);
-}
+اسکریپت‌های تعریف‌شده در `package.json`:
 
-client.on('messageCreate', async (message) => {
-  try {
-    await handleMessage(message);
-  } catch (err) {
-    if (isUserError(err)) {
-      await message.reply('متأسفانه درخواست شما نامعتبر بود.').catch(() => {});
-    } else {
-      console.error('خطای جدی:', err);
-    }
-  }
-});
+| دستور                   | کاربرد                           |
+| ----------------------- | -------------------------------- |
+| `npm run build`         | کامپایل TypeScript به `dist/`    |
+| `npm run dev`           | کامپایل در حالت watch            |
+| `npm run lint`          | اجرای ESLint                     |
+| `npm run format`        | اجرای Prettier روی `src/**/*.ts` |
+| `npm test`              | اجرای تست‌ها                      |
+| `npm run test:watch`    | اجرای تست‌ها در حالت watch        |
+| `npm run test:coverage` | اجرای تست همراه گزارش پوشش       |
+| `npm run docs`          | تولید مستندات TypeDoc            |
+
+پیشنهاد برای بررسی پیش از انتشار:
+
+```bash
+npm run lint
+npm run build
+npm run test:coverage
 ```
 
-### ۱۴.۶. الگوی Graceful Shutdown
+### 20.4 تست
 
-```ts
-process.on('SIGTERM', async () => {
-  console.log('در حال خاموشی...');
-  await client.destroy();
-  process.exit(0);
-});
+پروژه از Vitest استفاده می‌کند. فایل‌های تست با پسوند `.test.ts` در پوشهٔ `tests/` قرار می‌گیرند.
 
-process.on('SIGINT', async () => {
-  await client.destroy();
-  process.exit(0);
-});
+برای تست درخواست‌های HTTP، درخواست‌های `undici.request` را mock کنید تا تست به سرویس واقعی وابسته نباشد.
+
+## 21. عیب‌یابی و پرسش‌های متداول
+
+### ربات بعد از login پیام دریافت نمی‌کند
+
+موارد زیر را بررسی کنید:
+
+1. توکن معتبر باشد.
+2. مقدار `mode` درست تنظیم شده باشد.
+3. در حالت Webhook، آدرس عمومی و مسیر ورودی صحیح باشند.
+4. اگر قبلاً Webhook فعال کرده‌اید، با Polling تداخل نداشته باشد.
+5. listener رویداد `error` را ثبت کرده باشید.
+
+### خطای 429 دریافت می‌کنم
+
+این خطا به محدودیت نرخ درخواست مربوط است. PollingManager برای خطای 429 از `retry_after` استفاده می‌کند. برای درخواست‌های دستی نیز بهتر است محدودیت نرخ API را رعایت کنید.
+
+### چرا message.text مقدار ندارد؟
+
+همهٔ پیام‌ها متنی نیستند. ممکن است پیام شامل عکس، سند، ویدیو، صوت، موقعیت یا مخاطب باشد. پیش از استفاده از متن، `message.hasText` را بررسی کنید و فیلد رسانه‌ای مناسب را بخوانید.
+
+### چطور فایل دریافتی را دانلود کنم؟
+
+شناسهٔ فایل را از فیلد رسانه‌ای پیام بردارید و به `client.media.downloadFile(fileId)` بدهید.
+
+### آیا می‌توانم از JavaScript استفاده کنم؟
+
+بله. خروجی JavaScript و Type Declarationها در پکیج وجود دارد. برای بهره‌مندی از تکمیل خودکار و بررسی نوع، TypeScript یا ادیتوری با پشتیبانی از تعریف نوع توصیه می‌شود.
+
+### آیا Polling و Webhook هم‌زمان قابل استفاده‌اند؟
+
+در طراحی Client، این دو حالت به‌صورت انتخابی هستند. در سمت API بله نیز ثبت Webhook با دریافت آپدیت از طریق `getUpdates` سازگار نیست. در هر زمان یکی از روش‌ها را انتخاب کنید.
+
+### آیا رویداد preCheckoutQuery وجود دارد؟
+
+در تعریف `Update` نوع `PreCheckoutQuery` موجود است و متد پاسخ‌دهی پرداخت نیز پیاده‌سازی شده؛ اما انتشار رویداد در Client فعلی وجود ندارد. برای جزئیات به بخش [پرداخت](#15-پرداخت-و-فاکتور) و [محدودیت‌ها](#23-محدودیتها-و-نکات-قابل-توجه-در-نسخه-فعلی) مراجعه کنید.
+
+## 22. مشارکت در توسعه
+
+مشارکت در پروژه از طریق گزارش باگ، پیشنهاد قابلیت، بهبود مستندات و Pull Request امکان‌پذیر است.
+
+### آماده‌سازی محیط توسعه
+
+```bash
+git clone https://github.com/Persian-Caesar/bale.js.git
+cd bale.js
+npm install
+npm run build
 ```
 
-### ۱۴.۷. حفظ حالت بین ریستارت‌ها
+### استانداردهای کدنویسی
 
-اگر ربات ریستارت شود، `offset` polling و states از بین می‌روند. از یک ذخیره‌گاه استفاده کنید:
+- از TypeScript strict استفاده کنید.
+- از `any` تا حد امکان دوری کنید.
+- برای importهای صرفاً نوعی از `import type` استفاده کنید.
+- ویژگی‌های عمومی Structureها را تا جای ممکن `readonly` تعریف کنید.
+- برای API عمومی JSDoc بنویسید.
+- تست مرتبط با تغییر را اضافه کنید.
+- تغییرات معماری را با الگوی موجود هماهنگ کنید.
 
-```ts
-// با فایل
-const STATE_FILE = './state.json';
-const state = JSON.parse(await readFile(STATE_FILE, 'utf-8').catch(() => '{}'));
+### قالب پیام Commit
 
-setInterval(async () => {
-  await writeFile(STATE_FILE, JSON.stringify({
-    offset: (client as any).pollingManager?.offset,
-    conversations: Object.fromEntries(conversations),
-  }));
-}, 30_000);
+پروژه از Conventional Commits پیروی می‌کند:
+
+```text
+<type>(<scope>): <subject>
 ```
+
+نمونه‌ها:
+
+```text
+feat(builders): add invoice builder option
+fix(rest): handle file upload response
+docs(managers): document media methods
+test(collection): cover last method
+```
+
+انواع رایج:
+- `feat`: قابلیت جدید
+- `fix`: رفع باگ
+- `docs`: مستندات
+- `refactor`: بازآرایی
+- `test`: تست
+- `perf`: بهبود کارایی
+- `build`: تغییرات ساخت و وابستگی
+- `ci`: تنظیمات CI
+- `chore`: کارهای نگهداری
+
+### Pull Request
+
+پیش از ارسال PR:
+
+```bash
+npm run lint
+npm run build
+npm run test:coverage
+```
+
+اگر API عمومی تغییر کرده است، مستندات و JSDoc را هم به‌روز کنید.
+
+## 23. محدودیت‌ها و نکات قابل توجه در نسخهٔ فعلی
+
+این بخش عمداً بر اساس بررسی سورس همین نسخه نوشته شده است تا مثال‌های مستندات چیزی فراتر از پیاده‌سازی واقعی وعده ندهند.
+
+1. **رویداد Pre-checkout کامل نشده است.** نوع `PreCheckoutQuery` و متد `answerPreCheckout` وجود دارند، اما `dispatchUpdate` آن را منتشر نمی‌کند و `ClientEvents` نیز این رویداد را تعریف نکرده است.
+2. **رویداد `ready` دادهٔ خام API می‌دهد.** نوع آن `APIUser` است، نه Structure `User`.
+3. **نوع reply_markup در MessageManager محدود است.** `SendMessageOptions` فقط `InlineKeyboardMarkup` را تعریف کرده، در حالی که `MessageBuilder` هر دو نوع Inline و Reply Keyboard را می‌پذیرد.
+4. **ویرایش پیام در Structure محدود به متن است.** `Message.edit(text)` فقط متن را می‌گیرد و گزینه‌های ویرایش یا تغییر کیبورد ارائه نمی‌کند.
+5. **توزیع Updateها محدود است.** `dispatchUpdate` در نسخهٔ فعلی پیام جدید، پیام ویرایش‌شده، Callback Query و دادهٔ Web App را پردازش می‌کند؛ سایر انواع Update تعریف‌شده یا احتمالی به رویداد تبدیل نمی‌شوند.
+6. **Polling offset پایدار نیست.** مقدار offset در حافظه نگهداری می‌شود و با شروع مجدد فرایند از مقدار اولیه آغاز خواهد شد.
+7. **Webhook احراز هویت اختصاصی در Handler نشان نمی‌دهد.** Handler مسیر و متد را بررسی می‌کند و JSON را parse می‌کند؛ برای استقرار عمومی، لایهٔ محافظتی مناسب و کنترل منشأ درخواست را در زیرساخت خود در نظر بگیرید.
+8. **اعتبارسنجی Builder فاکتور حداقلی است.** وجود عنوان، توضیحات، payload و حداقل یک قیمت بررسی می‌شود؛ اعتبار Provider Token و Currency باید جداگانه تضمین شود.
+9. **مدیریت خطای REST به پاسخ API وابسته است.** `BaleAPIError` برای پاسخ ناموفق API ساخته می‌شود؛ خطاهای شبکه یا JSON parsing ممکن است از نوع خطای عمومی باشند.
+10. **برخی نمونه‌های README با نام پکیج ناسازگارند.** نام واقعی در `package.json` برابر `@persian-caesar/bale.js` است؛ در کدهای این راهنما از همین نام استفاده شده است.
+11. **تعریف‌های TypeScript لزوماً پوشش کامل API بله نیستند.** برای قابلیت‌های خارج از کلاس‌ها و متدهای مستندشده، باید سورس و مستندات رسمی API بله بررسی شوند.
+
+### پیشنهادهای توسعه برای نسخه‌های بعدی
+
+این موارد پیشنهاد هستند و به معنی وجود قابلیت در نسخهٔ فعلی نیستند:
+
+- اضافه‌کردن رویداد `preCheckoutQuery` و پردازش Updateهای پرداخت
+- تکمیل پوشش رویدادها و انواع Updateهای API
+- گسترش گزینه‌های ارسال و ویرایش پیام
+- یکسان‌سازی Typeهای Inline و Reply Keyboard در متدهای ارسال
+- افزودن تست یکپارچه برای Polling، Webhook، REST و Media
+- افزودن مکانیزم پایدارسازی offset در Polling
+- افزودن کنترل امنیتی Webhook و محدودیت اندازهٔ بدنه
+- افزودن نمونه‌های اجرایی مستقل برای هر Manager
+
+## 24. مجوز
+
+این پروژه تحت مجوز MIT منتشر شده است. متن کامل مجوز در فایل `LICENSE` مخزن قرار دارد.
 
 ---
 
-## ۱۵. عیب‌یابی
+## پیوندهای مفید
 
-### ❌ "Webhook is already set"
+- [مخزن GitHub](https://github.com/Persian-Caesar/bale.js)
+- [گزارش باگ و درخواست قابلیت](https://github.com/Persian-Caesar/bale.js/issues)
+- [صفحهٔ پکیج npm](https://www.npmjs.com/package/@persian-caesar/bale.js)
+- [BotFather بله](https://ble.ir/botfather)
 
-**علت:** قبلاً یک webhook ثبت شده و polling را قطع کرده.
-
-**راه‌حل:**
-
-```ts
-await client.rest.deleteWebhook();
-```
-
-### ❌ "Forbidden: bot was blocked by the user"
-
-**علت:** کاربر ربات را بلاک کرده.
-
-**راه‌حل:** کاربر را از لیست فعال حذف کنید.
-
-```ts
-client.on('messageCreate', async (message) => {
-  try {
-    await message.reply('...');
-  } catch (err) {
-    if (err instanceof BaleAPIError && err.code === 403) {
-      // این کاربر ربات را بلاک کرده — از لیست حذف کن
-      activeUsers.delete(message.from!.id);
-    }
-  }
-});
-```
-
-### ❌ دکمه‌ها در حالت لودینگ گیر کرده‌اند
-
-**علت:** `query.answer()` را صدا نزده‌اید.
-
-**راه‌حل:**
-
-```ts
-client.on('callbackQuery', async (query) => {
-  try {
-    // منطق شما
-  } finally {
-    await query.answer().catch(() => {}); // همیشه answer
-  }
-});
-```
-
-### ❌ "message is too long"
-
-**علت:** متن پیام از ۴۰۹۶ کاراکتر بیشتر است.
-
-**راه‌حل:** متن را تقسیم کنید:
-
-```ts
-async function sendLong(chatId: number, text: string) {
-  const CHUNK = 4000;
-  for (let i = 0; i < text.length; i += CHUNK) {
-    await client.messages.send(chatId, text.slice(i, i + CHUNK));
-  }
-}
-```
-
-### ❌ پاسخ‌ها در گروه تکرار می‌شوند
-
-**علت:** ربات به پیام خودش پاسخ می‌دهد.
-
-**راه‌حل:** بررسی کنید `from.isBot === false`:
-
-```ts
-client.on('messageCreate', (message) => {
-  if (message.from?.isBot) return;
-  // ...
-});
-```
-
-### ❌ "offset is not incremented"
-
-**علت:** در حالت polling، اگر offset را درست ذخیره نکنید، آپدیت‌ها دوباره دریافت می‌شوند.
-
-**راه‌حل:** `PollingManager` خودش این کار را می‌کند. اگر خودتان `getUpdates` صدا می‌زنید:
-
-```ts
-const updates = await client.rest.getUpdates({ offset });
-for (const u of updates) {
-  offset = u.update_id + 1;
-  client.dispatchUpdate(u);
-}
-```
-
----
-
-## ۱۶. سوالات متداول
-
-**Q: آیا bale.js هم در JavaScript کار می‌کند؟**
-
-بله. پکیج شامل JavaScript کامپایل‌شده + تعریف‌های TypeScript است. در JS از IntelliSense کامل بهره‌مند می‌شوید.
-
-**Q: تفاوت polling و webhook چیست؟**
-
-- **Polling:** ربات خودش مدام از Bale می‌پرسد «آپدیت جدید داری؟» — ساده‌تر، برای توسعه.
-- **Webhook:** Bale به سرور شما POST می‌زند — سریع‌تر و کم‌مصرف‌تر، برای production.
-
-**Q: آیا می‌توانم هم‌زمان polling و webhook داشته باشم؟**
-
-**نه.** در سمت Bale متقابلاً انحصاری هستند. اگر webhook ثبت باشد، `getUpdates` چیزی برنمی‌گرداند.
-
-**Q: چطور به فایل‌های دریافتی دسترسی داشته باشم؟**
-
-از `message.raw` (داده خام API) استفاده کنید:
-
-```ts
-const doc = message.raw.document;
-const photo = message.raw.photo;  // آرایه‌ای از سایزها
-const voice = message.raw.voice;
-```
-
-**Q: آیا می‌توانم از Express به‌جای حالت webhook استفاده کنم؟**
-
-بله، `dispatchUpdate` را در route خود صدا بزنید:
-
-```ts
-app.post('/bale', (req, res) => {
-  client.dispatchUpdate(req.body);
-  res.sendStatus(200);
-});
-```
-
-**Q: بهترین روش برای ذخیره توکن چیست؟**
-
-متغیر محیطی (`.env`) + هرگز در Git commit نکنید. برای production از secret manager (AWS Secrets، Vault و…) استفاده کنید.
-
-**Q: آیا از ESM پشتیبانی می‌شود؟**
-
-کتابخانه با `module: commonjs` ساخته شده. برای import در پروژه ESM از `require` یا `createRequire` استفاده کنید. آینده‌ای نزدیک احتمالاً ESM بومی هم اضافه می‌شود.
-
-**Q: چطور پیام طولانی بفرستم؟**
-
-باید دستی تقسیم کنید (حداکثر ۴۰۹۶ کاراکتر). به [بخش عیب‌یابی](#-message-is-too-long) مراجعه کنید.
-
-**Q: rate limit چقدر است؟**
-
-Bale محدودیت رسمی اعلام نکرده، اما در عمل مشابه Telegram است (۳۰ پیام/ثانیه به کاربران مختلف، ۱ پیام/ثانیه به یک چت). `PollingManager` کدهای 429 را خودکار مدیریت می‌کند، اما برای ارسال‌های خودتان با `withRetry` مدیریت کنید.
-
-**Q: چطور ربات را در سرور deploy کنم؟**
-
-بخش [الگوی Graceful Shutdown](#۱۴۶-الگوی-graceful-shutdown) و [حالت Webhook](#حالت-webhook--کی-و-چطور) را ببینید. برای Docker:
-
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-COPY dist ./dist
-CMD ["node", "dist/index.js"]
-```
-
----
-
-## ۱۷. سهم در توسعه
-
-ما از هر نوع مشارکت استقبال می‌کنیم — گزارش باگ، درخواست ویژگی، بهبود مستندات، یا کد.
-
-### راهنمای سریع
-
-1. **ریپازیتوری را fork و clone کنید:**
-   ```bash
-   git clone https://github.com/<your-username>/bale.js.git
-   cd bale.js
-   git remote add upstream https://github.com/Persian-Caesar/bale.js.git
-   ```
-
-2. **وابستگی‌ها را نصب کنید:**
-   ```bash
-   npm ci
-   ```
-
-3. **قبل از هر PR، اعتبارسنجی کامل:**
-   ```bash
-   npm run lint && npm run build && npm run test:coverage
-   ```
-
-4. **از Conventional Commits استفاده کنید:**
-   ```
-   feat(builders): add InvoiceBuilder with fluent API
-   fix(rest): handle multipart upload with zero-length buffers
-   docs: document MediaManager.downloadFile
-   ```
-
-### اسکریپت‌های موجود
-
-| دستور                   | توضیح                         |
-| :---------------------- | :---------------------------- |
-| `npm run build`         | کامپایل TypeScript به `dist/` |
-| `npm run dev`           | حالت watch                    |
-| `npm run lint`          | ESLint                        |
-| `npm run format`        | Prettier روی `src/`           |
-| `npm test`              | اجرای تست‌ها                   |
-| `npm run test:coverage` | تست + گزارش پوشش              |
-| `npm run docs`          | تولید TypeDoc                 |
-
-### اصول معماری (رعایت کنید)
-
-1. **Structures** فقط‌خواندنی — منطق پیچیده در Managers.
-2. **Managers** تنها جای تماس با API — هیچ `client.rest.request()` خارج از Manager نباشد.
-3. **Builders** خالص — شبکه را لمس نکنند.
-4. **BaleClient** فقط هماهنگ‌کننده — منطق کسب‌وکار در آن نباشد.
-5. **RESTManager** تنها لایه شبکه.
-
-### Code Style
-
-- TypeScript `strict` — بدون استثنا
-- `import type` برای type-only imports
-- `.js` extension در importها (سازگاری با NodeNext)
-- JSDoc برای همه APIهای عمومی
-- Prettier: 2 spaces، single quotes، semicolons، 100 char
-
-جزئیات کامل در [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
----
-
-## 📎 پیوست: خلاصه API
-
-### کلاس‌ها
-
-| کلاس                    | محل           | توضیح                |
-| :---------------------- | :------------ | :------------------- |
-| `BaleClient`            | `client/`     | نقطه ورود            |
-| `RESTManager`           | `rest/`       | لایه شبکه            |
-| `BaleAPIError`          | `rest/`       | خطای API             |
-| `User`                  | `structures/` | کاربر                |
-| `Chat`                  | `structures/` | چت                   |
-| `Message`               | `structures/` | پیام                 |
-| `CallbackQuery`         | `structures/` | کلیک دکمه            |
-| `TypedEmitter`          | `structures/` | EventEmitter تایپ‌شده |
-| `MessageManager`        | `managers/`   | پیام‌ها               |
-| `ChatManager`           | `managers/`   | چت‌ها                 |
-| `MediaManager`          | `managers/`   | رسانه                |
-| `GroupManager`          | `managers/`   | گروه                 |
-| `PaymentManager`        | `managers/`   | پرداخت               |
-| `PollingManager`        | `managers/`   | polling              |
-| `WebhookManager`        | `managers/`   | webhook              |
-| `InlineKeyboardBuilder` | `builders/`   | کیبورد شیشه‌ای        |
-| `ReplyKeyboardBuilder`  | `builders/`   | کیبورد سفارشی        |
-| `MessageBuilder`        | `builders/`   | پیام                 |
-| `InvoiceBuilder`        | `builders/`   | فاکتور               |
-| `Collection`            | `util/`       | Map توسعه‌یافته       |
-
-### نمونه کامل پروژه
-
-```ts
-// index.ts
-import 'dotenv/config';
-import {
-  BaleClient,
-  InlineKeyboardBuilder,
-  Collection,
-  BaleAPIError,
-} from '@persian-caesar/bale.js';
-
-const client = new BaleClient({
-  token: process.env.BALE_TOKEN!,
-  mode: 'polling',
-  polling: { timeout: 30, limit: 100 },
-});
-
-const conversations = new Collection<number, { step: string }>();
-
-client.on('ready', (me) => {
-  console.log(`✅ @${me.username} آماده است`);
-});
-
-client.on('messageCreate', async (message) => {
-  if (message.from?.isBot) return;
-
-  try {
-    if (message.text === '/start') {
-      const kb = new InlineKeyboardBuilder()
-        .addButton('📝 ثبت‌نام', { callback_data: 'signup' })
-        .addButton('❓ راهنما', { callback_data: 'help' })
-        .build();
-
-      await message.reply('خوش آمدید!', { reply_markup: kb });
-      return;
-    }
-
-    if (message.hasText) {
-      await message.reply(`دریافت شد: ${message.text}`);
-    }
-  } catch (err) {
-    if (err instanceof BaleAPIError) {
-      console.error(`[${err.code}] ${err.message}`);
-    } else {
-      console.error(err);
-    }
-  }
-});
-
-client.on('callbackQuery', async (query) => {
-  try {
-    if (query.data === 'signup') {
-      await query.editMessage('لطفاً نام خود را وارد کنید:');
-      conversations.set(query.from.id, { step: 'name' });
-    } else if (query.data === 'help') {
-      await query.editMessage('برای کمک با پشتیبانی تماس بگیرید.');
-    }
-  } finally {
-    await query.answer().catch(() => {});
-  }
-});
-
-client.on('error', (err) => {
-  console.error('[bale.js]', err);
-});
-
-process.on('SIGINT', async () => {
-  await client.destroy();
-  process.exit(0);
-});
-
-client.login();
-```
-
----
-
-**MIT License** © 2026 Sobhan Rasoulzadeh Asl — ساخته‌شده با ❤️ برای جامعه فارسی‌زبان
-
-> اگر این مستندات کمک کرد، به پروژه ⭐ دهید. مشارکت شما ارزشمند است!
+**پایان مستندات bale.js — نسخهٔ 0.1.0**
