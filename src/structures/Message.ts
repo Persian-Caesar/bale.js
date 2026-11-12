@@ -5,6 +5,14 @@ import { Base } from './Base';
 import { Chat } from './Chat';
 import { User } from './User';
 
+/** ورودی سازندهٔ Message می‌تواند دادهٔ خام API یا نمونهٔ Message باشد */
+export type MessageInput = APIMessage | Message;
+
+/** Type guard برای تشخیص دادهٔ خام */
+function isAPIMessage(data: MessageInput): data is APIMessage {
+    return (data as APIMessage).message_id !== undefined;
+}
+
 /**
  * نمایش یک پیام در بله با متدهای کمکی برای پاسخ، ویرایش و حذف.
  */
@@ -18,8 +26,28 @@ export class Message extends Base {
     public readonly replyMarkup?: InlineKeyboardMarkup;
     public readonly replyToMessage?: Message;
 
-    constructor(client: BaleClient, data: APIMessage) {
+    /** دادهٔ خام API برای استفاده‌های داخلی */
+    private readonly _raw: APIMessage;
+
+    constructor(client: BaleClient, data: MessageInput) {
         super(client);
+
+        // اگر ورودی از قبل Message است، فیلدها را کپی کن
+        if (data instanceof Message) {
+            this._raw = data._raw;
+            this.id = data.id;
+            this.chat = data.chat;
+            this.from = data.from;
+            this.text = data.text;
+            this.caption = data.caption;
+            this.date = data.date;
+            this.replyMarkup = data.replyMarkup;
+            this.replyToMessage = data.replyToMessage;
+            return;
+        }
+
+        // ورودی خام APIMessage
+        this._raw = data;
         this.id = data.message_id;
         this.chat = new Chat(client, data.chat);
         this.from = data.from ? new User(client, data.from) : undefined;
@@ -30,6 +58,11 @@ export class Message extends Base {
         this.replyToMessage = data.reply_to_message
             ? new Message(client, data.reply_to_message)
             : undefined;
+    }
+
+    /** دسترسی به دادهٔ خام (در صورت نیاز) */
+    get raw(): APIMessage {
+        return this._raw;
     }
 
     /**
@@ -43,7 +76,7 @@ export class Message extends Base {
             reply_to_message_id: this.id,
             reply_markup: options?.reply_markup,
         });
-        
+
         return new Message(this.client, data);
     }
 
