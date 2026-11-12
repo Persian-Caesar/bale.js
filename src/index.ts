@@ -13,6 +13,11 @@ export * from './managers/ChatManager';
 export * from './managers/PollingManager';
 export * from './managers/WebhookManager';
 
+export * from './builders/BaseBuilder';
+export * from './builders/InlineKeyboardBuilder';
+export * from './builders/ReplyKeyboardBuilder';
+export * from './builders/MessageBuilder';
+
 export * from './client/BaleClient';
 
 export * from './util/Collection';

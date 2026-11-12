@@ -1,20 +1,40 @@
 export type ButtonColor = 'primary' | 'success' | 'danger';
 
+/** اطلاعات مینی‌اپ (Web App) */
+export interface WebAppInfo {
+  url: string;
+}
+
+/** دکمهٔ کیبورد اینلاین (شیشه‌ای) */
 export interface InlineKeyboardButton {
-    text: string;
-    url?: string;
-    callback_data?: string;
-    color?: ButtonColor;
+  text: string;
+  url?: string;
+  callback_data?: string;
+  web_app?: WebAppInfo;
+  color?: ButtonColor;
 }
 
+/** مارک‌آپ کیبورد اینلاین */
 export interface InlineKeyboardMarkup {
-    inline_keyboard: InlineKeyboardButton[][];
+  inline_keyboard: InlineKeyboardButton[][];
 }
 
-/** کیبورد معمولی (Reply Keyboard) — در صورت نیاز در فازهای بعدی گسترش می‌یابد */
+/** دکمهٔ کیبورد ریپلای (سفارشی) */
+export interface KeyboardButton {
+  text: string;
+  request_contact?: boolean;
+  request_location?: boolean;
+}
+
+/** مارک‌آپ کیبورد ریپلای */
 export interface ReplyKeyboardMarkup {
-    keyboard: string[][];
-    resize_keyboard?: boolean;
-    one_time_keyboard?: boolean;
-    selective?: boolean;
+  keyboard: KeyboardButton[][];
+  resize_keyboard?: boolean;
+  one_time_keyboard?: boolean;
+  selective?: boolean;
+}
+
+/** حذف کیبورد ریپلای */
+export interface ReplyKeyboardRemove {
+  remove_keyboard: true;
 }

@@ -6,10 +6,11 @@ import { MessageManager } from '../managers/MessageManager';
 import { PollingManager } from '../managers/PollingManager';
 import { WebhookManager } from '../managers/WebhookManager';
 import type { APIUser } from '../types/user';
-import { EventEmitter } from 'events';
 import { ChatManager } from '../managers/ChatManager';
 import { RESTManager } from '../rest/RESTManager';
 import { Message } from '../structures/Message';
+import { TypedEmitter } from '../structures/TypedEmitter';
+import type { ClientEvents } from '../types/events';
 
 export type ClientMode = 'polling' | 'webhook';
 
@@ -42,7 +43,7 @@ export interface BaleClientOptions {
  * - callbackQuery (query: CallbackQuery)
  * - error (error: unknown)
  */
-export class BaleClient extends EventEmitter {
+export class BaleClient extends TypedEmitter<ClientEvents> {
     public readonly rest: RESTManager;
     public readonly messages: MessageManager;
     public readonly chats: ChatManager;

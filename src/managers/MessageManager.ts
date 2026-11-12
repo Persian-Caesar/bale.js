@@ -3,6 +3,7 @@ import type { BaleClient } from '../client/BaleClient';
 import { BaseManager } from './BaseManager';
 import { APIMessage } from '../types';
 import { Message } from '../structures/Message';
+import { BuiltMessage } from '../builders/MessageBuilder';
 
 export interface SendMessageOptions {
     reply_markup?: InlineKeyboardMarkup;
@@ -22,14 +23,16 @@ export class MessageManager extends BaseManager {
      */
     async send(
         chatId: number | string,
-        text: string,
+        content: string | BuiltMessage,
         options?: SendMessageOptions,
     ): Promise<Message> {
-        const data = await this.client.rest.sendMessage({
-            chat_id: chatId,
-            text,
-            ...options,
-        });
+        const payload =
+            typeof content === 'string'
+                ? { chat_id: chatId, text: content, ...options }
+                : { chat_id: chatId, ...content, ...options };
+
+        const data = await this.client.rest.sendMessage(payload);
+
         return new Message(this.client, data);
     }
 

@@ -4,7 +4,7 @@ import type { APIResponse } from '../types/api';
 import type { APIUser } from '../types/user';
 import type { APIMessage } from '../types/message';
 import type { Update } from '../types/update';
-import type { InlineKeyboardMarkup } from '../types/keyboard';
+import type { InlineKeyboardMarkup, ReplyKeyboardMarkup } from '../types/keyboard';
 import { BaleAPIError } from './errors';
 
 export interface RequestOptions {
@@ -85,7 +85,7 @@ export class RESTManager {
     sendMessage(params: {
         chat_id: number | string;
         text: string;
-        reply_markup?: InlineKeyboardMarkup;
+        reply_markup?: InlineKeyboardMarkup | ReplyKeyboardMarkup;
         reply_to_message_id?: number;
     }): Promise<APIMessage> {
         return this.request<APIMessage>('sendMessage', { body: params });
