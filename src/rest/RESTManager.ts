@@ -46,8 +46,12 @@ export class RESTManager {
 
             // فایل‌ها
             for (const [key, file] of Object.entries(options.files)) {
-                // @ts-ignore
-                const blob = new Blob([file.data], { type: file.contentType ?? 'application/octet-stream' });
+                const view =
+                    file.data.buffer instanceof ArrayBuffer
+                        ? new Uint8Array(file.data.buffer, file.data.byteOffset, file.data.byteLength)
+                        : Uint8Array.from(file.data); // SharedArrayBuffer fallback — copy
+
+                const blob = new Blob([view], { type: file.contentType ?? 'application/octet-stream' });
                 form.append(key, blob, file.filename);
             }
 
@@ -120,7 +124,7 @@ export class RESTManager {
         const url = `https://tapi.bale.ai/file/bot${this['token']}/${filePath}`;
         const response = await request(url);
         const arrayBuffer = await response.body.arrayBuffer();
-        
+
         return Buffer.from(arrayBuffer);
     }
 }
