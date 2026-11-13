@@ -35,6 +35,8 @@ export interface RESTManagerOptions {
     maxRetryAfterMs?: number;
     /** Maximum accepted download size. Defaults to 50 MiB. */
     maxDownloadBytes?: number;
+    /** Structured logger configuration for REST diagnostics. */
+    logger?: LoggerOptions;
 }
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -49,6 +51,7 @@ export class RESTManager {
     private readonly retries: number;
     private readonly maxRetryAfterMs: number;
     private readonly maxDownloadBytes: number;
+    private readonly logger: Logger;
 
     constructor(
         private readonly token: string,
@@ -69,6 +72,8 @@ export class RESTManager {
             DEFAULT_MAX_DOWNLOAD_BYTES,
             'maxDownloadBytes',
         );
+        this.logger = new Logger({ ...options.logger, context: options.logger?.context ?? 'REST' });
+        this.logger.addSecret(token);
     }
 
     /** Send a request to the Bale Bot API. Only HTTP 429 responses are retried automatically. */
@@ -82,7 +87,10 @@ export class RESTManager {
         const retries = nonNegativeInteger(options.retries, this.retries, 'retries');
         const payload = this.createPayload(options);
 
+        const requestId = createRequestId();
         for (let attempt = 0; ; attempt += 1) {
+            const startedAt = Date.now();
+            this.logger.debug('Bale API request started.', { requestId, method, attempt: attempt + 1 });
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(new BaleTimeoutError(timeoutMs)), timeoutMs);
             const onAbort = (): void => controller.abort(options.signal?.reason);
@@ -101,6 +109,9 @@ export class RESTManager {
                 });
 
                 const responseText = await response.body.text();
+                this.logger.debug('Bale API response received.', {
+                    requestId, method, statusCode: response.statusCode, durationMs: Date.now() - startedAt,
+                });
                 let data: APIResponse<T>;
                 try {
                     data = JSON.parse(responseText) as APIResponse<T>;
@@ -130,6 +141,7 @@ export class RESTManager {
                     );
                     if (error.code === 429 && attempt < retries) {
                         const retryAfter = Math.max(1, data.parameters?.retry_after ?? 1) * 1000;
+                        this.logger.warn('Bale API rate limit reached; retrying.', { requestId, method, attempt: attempt + 1, retryAfterMs: Math.min(retryAfter, this.maxRetryAfterMs) });
                         await abortableDelay(Math.min(retryAfter, this.maxRetryAfterMs), options.signal);
                         continue;
                     }
@@ -140,8 +152,12 @@ export class RESTManager {
                     throw new BaleHTTPError(response.statusCode, responseText);
                 }
 
+                this.logger.debug('Bale API request completed.', { requestId, method, durationMs: Date.now() - startedAt });
                 return data.result as T;
             } catch (error) {
+                const failureData = { requestId, method, attempt: attempt + 1, durationMs: Date.now() - startedAt, error: error instanceof Error ? { name: error.name, message: error.message } : String(error) };
+                if (error instanceof BaleAPIError && error.code === 429) this.logger.warn('Bale API request was rate limited.', failureData);
+                else this.logger.error('Bale API request failed.', failureData);
                 if (error instanceof BaleAPIError || error instanceof BaleHTTPError ||
                     error instanceof BaleInvalidResponseError) {
                     throw error;
@@ -262,18 +278,14 @@ export class RESTManager {
                     form.append(key, typeof value === 'string' ? value : JSON.stringify(value));
                 }
             }
-
             for (const [key, file] of Object.entries(options.files)) {
                 const blob = new Blob([Uint8Array.from(file.data)], {
                     type: file.contentType ?? 'application/octet-stream',
                 });
-                
                 form.append(key, blob, file.filename);
             }
-
             return { headers: {}, body: form };
         }
-
         return {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(options.body ?? {}),
@@ -282,12 +294,8 @@ export class RESTManager {
 }
 
 function positiveInteger(value: number | undefined, fallback: number, name: string): number {
-    if (value === undefined)
-         return fallback;
-
-    if (!Number.isSafeInteger(value) || value <= 0)
-         throw new RangeError(`${name} must be a positive integer.`);
-
+    if (value === undefined) return fallback;
+    if (!Number.isSafeInteger(value) || value <= 0) throw new RangeError(`${name} must be a positive integer.`);
     return value;
 }
 

@@ -13,6 +13,8 @@ import { Message } from '../structures/Message';
 import { PaymentManager } from '../managers/PaymentManager';
 import { GroupManager } from '../managers/GroupManager';
 import type { RESTManagerOptions } from '../rest/RESTManager';
+import { Logger } from '../util/Logger';
+import type { LoggerOptions } from '../util/Logger';
 
 export type ClientMode = 'polling' | 'webhook';
 
@@ -41,6 +43,8 @@ export interface BaleClientOptions {
     };
     /** تنظیمات ارتباط HTTP با API بله */
     rest?: RESTManagerOptions;
+    /** تنظیمات لاگ‌گیری ساختاریافته */
+    logger?: LoggerOptions;
 }
 
 /**
@@ -54,6 +58,7 @@ export interface BaleClientOptions {
  */
 export class BaleClient extends TypedEmitter<ClientEvents> {
     public readonly rest: RESTManager;
+    public readonly logger: Logger;
     public readonly messages: MessageManager;
     public readonly chats: ChatManager;
 
@@ -77,7 +82,12 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         this.mode = options.mode ?? 'polling';
         this.options = options;
 
-        this.rest = new RESTManager(this.token, options.rest);
+        this.logger = new Logger({ ...options.logger, context: options.logger?.context ?? 'BaleClient' });
+        this.logger.addSecret(this.token);
+        this.rest = new RESTManager(this.token, {
+            ...options.rest,
+            logger: { ...options.rest?.logger, ...options.logger, context: 'REST' },
+        });
         this.messages = new MessageManager(this);
         this.chats = new ChatManager(this);
 
@@ -100,13 +110,16 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
     async login(): Promise<void> {
         if (this.started) return;
         this.started = true;
+        this.logger.info('Logging in to Bale.', { mode: this.mode });
         try {
             this.readyUser = await this.rest.getMe();
+            this.logger.info('Bale client authenticated.', { botId: this.readyUser.id, username: this.readyUser.username });
             this.emit('ready', this.readyUser);
 
             if (this.mode === 'polling') await this.startPolling();
             else await this.startWebhook();
         } catch (error) {
+            this.logger.error('Bale client login failed.', { error: error instanceof Error ? { name: error.name, message: error.message } : String(error) });
             this.started = false;
             this.readyUser = undefined;
             throw error;
@@ -115,6 +128,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
 
     /** توقف دریافت آپدیت‌ها (چه polling و چه webhook) */
     async destroy(): Promise<void> {
+        this.logger.info('Destroying Bale client.');
         if (this.pollingManager) {
             await this.pollingManager.stop();
             this.pollingManager = undefined;
@@ -125,6 +139,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         }
         this.started = false;
         this.readyUser = undefined;
+        this.logger.info('Bale client destroyed.');
     }
 
     // ─── مدیریت Polling ───────────────────────────────────────────
@@ -168,6 +183,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
      * آپدیت خام را به ساختار مناسب تبدیل کرده و رویداد مربوطه را منتشر می‌کند.
      */
     public dispatchUpdate(update: Update): void {
+        this.logger.debug('Dispatching Bale update.', { updateId: update.update_id, updateType: getUpdateType(update) });
         if (update.message) {
             const message = new Message(this, update.message);
             this.emit('messageCreate', message);
@@ -198,4 +214,9 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         }
 
     }
+}
+
+function getUpdateType(update: Update): string {
+    const keys = ['message', 'edited_message', 'callback_query', 'pre_checkout_query'] as const;
+    return keys.filter((key) => update[key] !== undefined).join(',') || 'unknown';
 }

@@ -1,5 +1,3 @@
-import { version } from '../package.json';
-
 export * from './types/index';
 export * from './rest/RESTManager';
 export * from './rest/errors';
@@ -33,3 +31,4 @@ export * from './client/BaleClient';
 export * from './util/Collection';
 
 export const VERSION = version;
+export * from './util/Logger';

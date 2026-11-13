@@ -50,6 +50,7 @@ export class WebhookManager {
     /** Start the local HTTP listener first, then register the public webhook URL. */
     async start(): Promise<void> {
         if (this.started) return;
+        this.client.logger.info('Starting webhook listener.', { path: this.path, port: this.port });
         if (!this.secretToken) {
             process.emitWarning(
                 'Webhook requests are unauthenticated. Configure webhook.secretToken and inject x-bale-secret-token at your proxy.',
@@ -74,6 +75,7 @@ export class WebhookManager {
             const registered = await this.client.rest.setWebhook(this.url);
             if (!registered) throw new Error('Bale API did not confirm webhook registration.');
             this.started = true;
+            this.client.logger.info('Webhook started and registered.', { path: this.path, port: this.port });
         } catch (error) {
             await this.closeServer().catch((closeError: unknown) => this.reportError(closeError));
             throw error;
@@ -82,6 +84,7 @@ export class WebhookManager {
 
     /** Stop accepting requests, then unregister the remote webhook. */
     async stop(): Promise<void> {
+        this.client.logger.info('Stopping webhook.');
         let closeError: unknown;
         try {
             await this.closeServer();
@@ -96,6 +99,7 @@ export class WebhookManager {
             throw error;
         }
         if (closeError) throw closeError;
+        this.client.logger.info('Webhook stopped.');
     }
 
     private async closeServer(): Promise<void> {
@@ -110,15 +114,18 @@ export class WebhookManager {
 
     private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
         if (req.method !== 'POST' || requestPath(req.url) !== this.path) {
+            this.client.logger.warn('Rejected webhook request with invalid method or path.', { method: req.method, path: requestPath(req.url) });
             respond(res, 404, 'Not Found');
             return;
         }
         if (this.secretToken && !safeTokenEqual(req.headers['x-bale-secret-token'], this.secretToken)) {
+            this.client.logger.warn('Rejected webhook request: invalid secret token.', { path: this.path });
             respond(res, 401, 'Unauthorized');
             return;
         }
         const contentType = req.headers['content-type']?.split(';', 1)[0]?.trim().toLowerCase();
         if (contentType !== 'application/json') {
+            this.client.logger.warn('Rejected webhook request: unsupported content type.', { contentType });
             respond(res, 415, 'Unsupported Media Type');
             return;
         }
@@ -149,6 +156,7 @@ export class WebhookManager {
                 return;
             }
             this.client.dispatchUpdate(parsed);
+            this.client.logger.debug('Webhook update dispatched.', { updateId: parsed.update_id });
             respond(res, 200, 'OK');
         } catch (error) {
             this.reportError(error);
@@ -157,6 +165,7 @@ export class WebhookManager {
     }
 
     private reportError(error: unknown): void {
+        this.client.logger.error('Webhook handler failed.', { error: error instanceof Error ? { name: error.name, message: error.message } : String(error) });
         try {
             this.client.emit('error', error);
         } catch (listenerError) {

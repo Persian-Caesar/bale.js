@@ -31,6 +31,7 @@ export class PollingManager {
     /** Start the long-polling loop. Repeated calls are safe. */
     start(): void {
         if (this.running) return;
+        this.client.logger.info('Polling started.', { timeout: this.timeout, limit: this.limit });
         this.running = true;
         this.loopPromise = this.loop();
     }
@@ -38,10 +39,12 @@ export class PollingManager {
     /** Abort the in-flight getUpdates request and wait until the loop exits. */
     async stop(): Promise<void> {
         this.running = false;
+        this.client.logger.info('Polling stopping.');
         this.controller?.abort(new Error('Polling stopped by client.'));
         await this.loopPromise;
         this.loopPromise = undefined;
         this.controller = undefined;
+        this.client.logger.info('Polling stopped.', { offset: this.offset });
     }
 
     private async loop(): Promise<void> {
@@ -54,6 +57,7 @@ export class PollingManager {
                     { signal: controller.signal, timeoutMs: (this.timeout + 5) * 1000, retries: 0 },
                 );
 
+                this.client.logger.debug('Polling received updates.', { count: updates.length, offset: this.offset });
                 for (const update of updates) {
                     if (!this.running) break;
                     // Advance the offset only after dispatch succeeds, so a synchronous
@@ -75,6 +79,7 @@ export class PollingManager {
     }
 
     private reportError(error: unknown): void {
+        this.client.logger.error('Polling loop failed.', { error: error instanceof Error ? { name: error.name, message: error.message } : String(error) });
         try {
             this.client.emit('error', error);
         } catch (listenerError) {
