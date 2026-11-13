@@ -1,76 +1,218 @@
-import {
-    createServer,
-    type Server,
-    type IncomingMessage,
-    type ServerResponse
-} from 'http';
+import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import { timingSafeEqual } from 'node:crypto';
 import type { BaleClient } from '../client/BaleClient';
 import type { Update } from '../types/update';
 
 export interface WebhookOptions {
+    /** Public HTTPS URL configured at Bale. */
     url: string;
+    /** Local HTTP listening port. Defaults to 3000. */
     port?: number;
+    /** Local request path. Defaults to /bale/webhook. */
     path?: string;
+    /** Optional shared secret expected in x-bale-secret-token. */
+    secretToken?: string;
+    /** Maximum accepted request body in bytes. Defaults to 1 MiB. */
+    maxBodyBytes?: number;
 }
+
+const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 
 export class WebhookManager {
     private readonly client: BaleClient;
     private readonly url: string;
     private readonly port: number;
     private readonly path: string;
-
+    private readonly secretToken?: string;
+    private readonly maxBodyBytes: number;
     private server?: Server;
+    private started = false;
 
     constructor(client: BaleClient, options: WebhookOptions) {
         this.client = client;
-        this.url = options.url;
+        this.url = validateWebhookUrl(options.url);
         this.port = options.port ?? 3000;
-        this.path = options.path ?? '/bale/webhook';
+        const publicPath = new URL(this.url).pathname || '/bale/webhook';
+        this.path = normalizePath(options.path ?? publicPath);
+        this.secretToken = options.secretToken;
+        this.maxBodyBytes = options.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
+        if (!Number.isInteger(this.port) || this.port < 0 || this.port > 65535) {
+            throw new RangeError('Webhook port must be an integer between 0 and 65535.');
+        }
+        if (!Number.isSafeInteger(this.maxBodyBytes) || this.maxBodyBytes <= 0) {
+            throw new RangeError('maxBodyBytes must be a positive safe integer.');
+        }
+        if (this.secretToken !== undefined && this.secretToken.length < 16) {
+            throw new RangeError('Webhook secretToken must contain at least 16 characters.');
+        }
     }
 
-    /** ثبت وبهوک در بله و راه‌اندازی سرور محلی */
+    /** Start the local HTTP listener first, then register the public webhook URL. */
     async start(): Promise<void> {
-        // ۱. ثبت آدرس وبهوک در بله
-        await this.client.rest.setWebhook(this.url);
+        if (this.started) return;
+        if (!this.secretToken) {
+            process.emitWarning(
+                'Webhook requests are unauthenticated. Configure webhook.secretToken and inject x-bale-secret-token at your proxy.',
+                { type: 'BaleWebhookSecurityWarning' },
+            );
+        }
+        const server = createServer((req, res) => {
+            void this.handleRequest(req, res);
+        });
+        this.server = server;
+        server.on('error', (error) => this.reportError(error));
 
-        // ۲. راه‌اندازی سرور HTTP محلی
-        this.server = createServer((req, res) => this.handleRequest(req, res));
+        try {
+            await new Promise<void>((resolve, reject) => {
+                const onError = (error: Error): void => reject(error);
+                server.once('error', onError);
+                server.listen(this.port, () => {
+                    server.off('error', onError);
+                    resolve();
+                });
+            });
+            const registered = await this.client.rest.setWebhook(this.url);
+            if (!registered) throw new Error('Bale API did not confirm webhook registration.');
+            this.started = true;
+        } catch (error) {
+            await this.closeServer().catch((closeError: unknown) => this.reportError(closeError));
+            throw error;
+        }
+    }
+
+    /** Stop accepting requests, then unregister the remote webhook. */
+    async stop(): Promise<void> {
+        let closeError: unknown;
+        try {
+            await this.closeServer();
+        } catch (error) {
+            closeError = error;
+        }
+        this.started = false;
+        try {
+            await this.client.rest.deleteWebhook();
+        } catch (error) {
+            if (closeError) throw new AggregateError([closeError, error], 'Failed to stop webhook cleanly.');
+            throw error;
+        }
+        if (closeError) throw closeError;
+    }
+
+    private async closeServer(): Promise<void> {
+        const server = this.server;
+        if (!server) return;
+        this.server = undefined;
+        if (!server.listening) return;
         await new Promise<void>((resolve, reject) => {
-            this.server!.listen(this.port, () => resolve());
-            this.server!.on('error', reject);
+            server.close((error) => (error ? reject(error) : resolve()));
         });
     }
 
-    /** توقف سرور و حذف وبهوک از سمت بله */
-    async stop(): Promise<void> {
-        if (this.server) {
-            await new Promise<void>((resolve, reject) => {
-                this.server!.close((err) => (err ? reject(err) : resolve()));
-            });
-            this.server = undefined;
+    private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+        if (req.method !== 'POST' || requestPath(req.url) !== this.path) {
+            respond(res, 404, 'Not Found');
+            return;
         }
-        // حذف وبهوک تا امکان استفاده از polling دوباره فراهم شود
-        await this.client.rest.deleteWebhook();
-    }
-
-    private handleRequest(req: IncomingMessage, res: ServerResponse): void {
-        // فقط مسیر مشخص‌شده و متد POST را می‌پذیریم
-        if (req.method !== 'POST' || req.url !== this.path) {
-            res.writeHead(404).end();
+        if (this.secretToken && !safeTokenEqual(req.headers['x-bale-secret-token'], this.secretToken)) {
+            respond(res, 401, 'Unauthorized');
+            return;
+        }
+        const contentType = req.headers['content-type']?.split(';', 1)[0]?.trim().toLowerCase();
+        if (contentType !== 'application/json') {
+            respond(res, 415, 'Unsupported Media Type');
+            return;
+        }
+        const contentLength = Number(req.headers['content-length'] ?? 0);
+        if (Number.isFinite(contentLength) && contentLength > this.maxBodyBytes) {
+            respond(res, 413, 'Payload Too Large');
+            req.destroy();
             return;
         }
 
-        let body = '';
-        req.on('data', (chunk) => (body += chunk));
-        req.on('end', () => {
-            try {
-                const update = JSON.parse(body) as Update;
-                this.client.dispatchUpdate(update);
-                res.writeHead(200).end('OK');
-            } catch (error) {
-                this.client.emit('error', error);
-                res.writeHead(400).end('Bad Request');
+        try {
+            const chunks: Buffer[] = [];
+            let totalBytes = 0;
+            for await (const chunk of req) {
+                const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+                totalBytes += buffer.length;
+                if (totalBytes > this.maxBodyBytes) {
+                    respond(res, 413, 'Payload Too Large');
+                    req.destroy();
+                    return;
+                }
+                chunks.push(buffer);
             }
-        });
+
+            const parsed: unknown = JSON.parse(Buffer.concat(chunks, totalBytes).toString('utf8'));
+            if (!isUpdate(parsed)) {
+                respond(res, 400, 'Invalid Update');
+                return;
+            }
+            this.client.dispatchUpdate(parsed);
+            respond(res, 200, 'OK');
+        } catch (error) {
+            this.reportError(error);
+            if (!res.headersSent) respond(res, 400, 'Bad Request');
+        }
     }
+
+    private reportError(error: unknown): void {
+        try {
+            this.client.emit('error', error);
+        } catch (listenerError) {
+            process.emitWarning(listenerError instanceof Error ? listenerError : String(listenerError), {
+                type: 'BaleWebhookListenerWarning',
+            });
+        }
+    }
+}
+
+function validateWebhookUrl(value: string): string {
+    let url: URL;
+    try {
+        url = new URL(value);
+    } catch {
+        throw new TypeError('webhook.url must be a valid absolute URL.');
+    }
+    if (url.protocol !== 'https:') throw new TypeError('webhook.url must use HTTPS.');
+    if (url.username || url.password || url.search || url.hash) {
+        throw new TypeError('webhook.url must not contain credentials, query parameters, or a hash.');
+    }
+    return url.toString();
+}
+
+function normalizePath(value: string): string {
+    if (!value.startsWith('/') || value.includes('?') || value.includes('#')) {
+        throw new TypeError('webhook.path must be an absolute URL path without query or hash.');
+    }
+    return value;
+}
+
+function requestPath(value: string | undefined): string | undefined {
+    if (!value) return undefined;
+    try {
+        return new URL(value, 'http://localhost').pathname;
+    } catch {
+        return undefined;
+    }
+}
+
+function safeTokenEqual(header: string | string[] | undefined, expected: string): boolean {
+    if (typeof header !== 'string') return false;
+    const actualBuffer = Buffer.from(header);
+    const expectedBuffer = Buffer.from(expected);
+    return actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+function isUpdate(value: unknown): value is Update {
+    if (!value || typeof value !== 'object') return false;
+    const update = value as Record<string, unknown>;
+    return Number.isSafeInteger(update.update_id) && (typeof update.update_id === 'number') &&
+        ['message', 'edited_message', 'callback_query', 'pre_checkout_query'].some((key) => key in update);
+}
+
+function respond(res: ServerResponse, status: number, message: string): void {
+    if (res.headersSent || res.destroyed) return;
+    res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'content-length': Buffer.byteLength(message) });
+    res.end(message);
 }

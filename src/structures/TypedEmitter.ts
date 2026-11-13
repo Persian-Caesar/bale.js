@@ -5,6 +5,16 @@ import { EventEmitter } from 'events';
  * مثال: class Client extends TypedEmitter<ClientEvents> { ... }
  */
 export class TypedEmitter<Events extends Record<string, any[]>> extends EventEmitter {
+    constructor() {
+        super({ captureRejections: true });
+        // Avoid Node's fatal unhandled-'error' behavior when consumers have not
+        // registered an error listener yet. A user listener suppresses this warning.
+        super.on('error', (error: unknown) => {
+            if (this.listenerCount('error') === 1) {
+                process.emitWarning(error instanceof Error ? error : String(error), { type: 'BaleClientWarning' });
+            }
+        });
+    }
     public on<K extends keyof Events & string>(
         event: K,
         listener: (...args: Events[K]) => void,
