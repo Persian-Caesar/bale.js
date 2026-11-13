@@ -12,6 +12,7 @@ import {
     BaleTimeoutError,
 } from './errors';
 import type { BaleFile } from '../types/media';
+import { createRequestId, Logger, LoggerOptions } from '../util/Logger';
 
 export interface RequestOptions {
     /** JSON parameters (ignored for multipart fields that are null/undefined). */
