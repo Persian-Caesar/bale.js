@@ -6,12 +6,13 @@ import { CallbackQuery } from '../structures/CallbackQuery';
 import { TypedEmitter } from '../structures/TypedEmitter';
 import { MediaManager } from '../managers/MediaManager';
 import type { APIUser } from '../types/user';
-import type { Update } from '../types/update';
+import type { PreCheckoutQuery, Update } from '../types/update';
 import { ChatManager } from '../managers/ChatManager';
 import { RESTManager } from '../rest/RESTManager';
 import { Message } from '../structures/Message';
 import { PaymentManager } from '../managers/PaymentManager';
 import { GroupManager } from '../managers/GroupManager';
+import type { RESTManagerOptions } from '../rest/RESTManager';
 
 export type ClientMode = 'polling' | 'webhook';
 
@@ -24,6 +25,7 @@ export interface BaleClientOptions {
         timeout?: number;
         /** حداکثر تعداد آپدیت در هر درخواست. پیش‌فرض ۱۰۰ */
         limit?: number;
+        errorRetryDelayMs?: number;
     };
     /** گزینه‌های مخصوص Webhook */
     webhook?: {
@@ -33,7 +35,12 @@ export interface BaleClientOptions {
         port?: number;
         /** مسیر دریافت آپدیت‌ها */
         path?: string;
+        /** Secret expected in the x-bale-secret-token request header (usually set by a reverse proxy). */
+        secretToken?: string;
+        maxBodyBytes?: number;
     };
+    /** تنظیمات ارتباط HTTP با API بله */
+    rest?: RESTManagerOptions;
 }
 
 /**
@@ -42,6 +49,7 @@ export interface BaleClientOptions {
  * - messageCreate (message: Message)
  * - messageEdit (message: Message)
  * - callbackQuery (query: CallbackQuery)
+ * - preCheckoutQuery (query: PreCheckoutQuery)
  * - error (error: unknown)
  */
 export class BaleClient extends TypedEmitter<ClientEvents> {
@@ -55,6 +63,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
     private pollingManager?: PollingManager;
     private webhookManager?: WebhookManager;
     private readyUser?: APIUser;
+    private started = false;
 
     public readonly media: MediaManager;
 
@@ -63,11 +72,12 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
 
     constructor(options: BaleClientOptions) {
         super();
+        if (!options.token?.trim()) throw new TypeError('BaleClient requires a non-empty bot token.');
         this.token = options.token;
         this.mode = options.mode ?? 'polling';
         this.options = options;
 
-        this.rest = new RESTManager(this.token);
+        this.rest = new RESTManager(this.token, options.rest);
         this.messages = new MessageManager(this);
         this.chats = new ChatManager(this);
 
@@ -88,26 +98,33 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
      * - در حالت webhook: ثبت وبهوک و راه‌اندازی سرور محلی.
      */
     async login(): Promise<void> {
-        this.readyUser = await this.rest.getMe();
-        this.emit('ready', this.readyUser);
+        if (this.started) return;
+        this.started = true;
+        try {
+            this.readyUser = await this.rest.getMe();
+            this.emit('ready', this.readyUser);
 
-        if (this.mode === 'polling') {
-            await this.startPolling();
-        } else {
-            await this.startWebhook();
+            if (this.mode === 'polling') await this.startPolling();
+            else await this.startWebhook();
+        } catch (error) {
+            this.started = false;
+            this.readyUser = undefined;
+            throw error;
         }
     }
 
     /** توقف دریافت آپدیت‌ها (چه polling و چه webhook) */
     async destroy(): Promise<void> {
         if (this.pollingManager) {
-            this.pollingManager.stop();
+            await this.pollingManager.stop();
             this.pollingManager = undefined;
         }
         if (this.webhookManager) {
             await this.webhookManager.stop();
             this.webhookManager = undefined;
         }
+        this.started = false;
+        this.readyUser = undefined;
     }
 
     // ─── مدیریت Polling ───────────────────────────────────────────
@@ -116,6 +133,7 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         this.pollingManager = new PollingManager(this, {
             timeout: this.options.polling?.timeout,
             limit: this.options.polling?.limit,
+            errorRetryDelayMs: this.options.polling?.errorRetryDelayMs,
         });
         this.pollingManager.start();
     }
@@ -132,8 +150,15 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
             url: webhookOptions.url,
             port: webhookOptions.port,
             path: webhookOptions.path,
+            secretToken: webhookOptions.secretToken,
+            maxBodyBytes: webhookOptions.maxBodyBytes,
         });
-        await this.webhookManager.start();
+        try {
+            await this.webhookManager.start();
+        } catch (error) {
+            this.webhookManager = undefined;
+            throw error;
+        }
     }
 
     // ─── توزیع آپدیت‌ها بین رویدادها ─────────────────────────────
@@ -157,6 +182,10 @@ export class BaleClient extends TypedEmitter<ClientEvents> {
         if (update.callback_query) {
             const callback = new CallbackQuery(this, update.callback_query);
             this.emit('callbackQuery', callback);
+        }
+
+        if (update.pre_checkout_query) {
+            this.emit('preCheckoutQuery', update.pre_checkout_query);
         }
 
         if (update.message?.web_app_data) {

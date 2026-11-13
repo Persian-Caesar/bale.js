@@ -1,6 +1,7 @@
 import { CallbackQuery } from '../structures/CallbackQuery';
 import type { APIUser } from './user';
 import type { Message } from '../structures/Message';
+import type { PreCheckoutQuery } from './update';
 
 /**
  * نقشهٔ رویدادهای کلاینت.
@@ -11,6 +12,7 @@ export type ClientEvents = {
     messageCreate: [message: Message];
     messageEdit: [message: Message];
     callbackQuery: [query: CallbackQuery];
+    preCheckoutQuery: [query: PreCheckoutQuery];
     webAppData: [data: {
         from: APIUser | undefined,
         data: string,
