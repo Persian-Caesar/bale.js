@@ -6,7 +6,7 @@ const client = new BaleClient({
   token: process.env.BALE_TOKEN,
   mode: 'webhook',
   webhook: {
-    url: 'https://persiancaesar.ir',
+    url: 'https://bot.persiancaesar.ir',
     port: 3000,
     path: '/bale/webhook'
   }
